@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#07111f">
+<title>M.A.R.S. — Personal AI Operating System</title>
+<style>
+:root{--bg:#050b14;--panel:rgba(13,28,46,.72);--panel2:rgba(17,39,61,.58);--line:rgba(111,190,255,.16);--cyan:#65d9ff;--blue:#4e8dff;--muted:#8ca7c2;--text:#e8f5ff;--green:#65efbd;--red:#ff718b;--gold:#ffc66d;--shadow:0 18px 55px rgba(0,0,0,.28)}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 78% 0%,#12304a 0,transparent 35%),radial-gradient(ellipse at 5% 90%,#0b2440 0,transparent 35%),var(--bg);color:var(--text);font:14px/1.5 Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,sans-serif;min-height:100vh;overflow-x:hidden}
+body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.12;background-image:linear-gradient(rgba(100,190,255,.12) 1px,transparent 1px),linear-gradient(90deg,rgba(100,190,255,.12) 1px,transparent 1px);background-size:48px 48px;mask-image:linear-gradient(to bottom,black,transparent 85%)}
+button,input,textarea,select{font:inherit}button{cursor:pointer}.app{display:grid;grid-template-columns:250px 1fr;min-height:100vh;position:relative}.sidebar{border-right:1px solid var(--line);background:rgba(5,14,25,.82);backdrop-filter:blur(22px);padding:24px 16px;display:flex;flex-direction:column;z-index:4}.brand{display:flex;align-items:center;gap:12px;padding:4px 10px 28px}.brand-mark{width:38px;height:38px;border:1px solid rgba(101,217,255,.65);border-radius:12px;display:grid;place-items:center;color:var(--cyan);box-shadow:0 0 22px #39bfff33,inset 0 0 18px #39bfff22;font-weight:800;letter-spacing:-2px}.brand strong{letter-spacing:3px;font-size:16px}.brand small{display:block;color:var(--muted);font-size:9px;letter-spacing:2px;margin-top:1px}.nav-label{color:#5d7b98;font-size:10px;letter-spacing:2px;padding:12px 12px 8px}.nav{display:grid;gap:5px}.nav button{border:1px solid transparent;background:transparent;color:#9db4ca;text-align:left;padding:11px 12px;border-radius:10px;display:flex;align-items:center;gap:12px;transition:.2s}.nav button:hover,.nav button.active{background:linear-gradient(100deg,#16406488,#10243b66);border-color:#61d7ff35;color:#eafaff}.nav button.active{box-shadow:inset 2px 0 var(--cyan),0 0 22px #31b9ff0d}.nav .ico{width:18px;text-align:center;color:var(--cyan);font-size:15px}.side-bottom{margin-top:auto}.drive-status{border:1px solid var(--line);border-radius:13px;padding:13px;background:#0b1c2c99;margin:10px 3px 16px}.status-line{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--muted)}.dot{width:7px;height:7px;border-radius:50%;background:#71869b;box-shadow:0 0 10px currentColor}.dot.on{background:var(--green);color:var(--green)}.drive-status strong{display:block;margin:7px 0 2px;font-size:12px}.side-foot{color:#58728c;font-size:10px;padding:0 12px;letter-spacing:1px}
+main{padding:28px clamp(18px,4vw,54px) 50px;max-width:1600px;width:100%;margin:auto}.topbar{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:30px}.eyebrow{color:var(--cyan);font-size:10px;letter-spacing:2.5px;text-transform:uppercase}.topbar h1{font-size:clamp(23px,3vw,34px);letter-spacing:-1px;margin:4px 0 0}.top-actions{display:flex;align-items:center;gap:10px}.clock{font-variant-numeric:tabular-nums;color:#a9c4dc;font-size:12px;padding:9px 12px;border:1px solid var(--line);border-radius:10px;background:#0b1b2b88}
+.panel{background:linear-gradient(145deg,rgba(18,43,66,.76),rgba(8,20,34,.78));border:1px solid var(--line);border-radius:17px;box-shadow:var(--shadow);backdrop-filter:blur(18px);position:relative;overflow:hidden}.panel:after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(120deg,rgba(115,216,255,.035),transparent 35%,transparent 70%,rgba(68,137,255,.035))}.hero{padding:26px;display:grid;grid-template-columns:1.5fr .8fr;gap:20px;align-items:center;min-height:230px}.hero h2{font-size:clamp(25px,4vw,39px);line-height:1.1;letter-spacing:-1.4px;margin:10px 0}.hero p{color:#9bb4ca;max-width:540px;margin:0 0 18px}.hero-actions{display:flex;gap:9px;flex-wrap:wrap}.btn{border:1px solid #65d9ff55;background:#123a57;color:#e8faff;border-radius:10px;padding:10px 14px;transition:.2s}.btn:hover{filter:brightness(1.2);transform:translateY(-1px)}.btn.primary{background:linear-gradient(120deg,#087eae,#315fd0);border-color:#6bdcff88;box-shadow:0 6px 24px #168bcb2c}.btn.ghost{background:#0b1c2c99;border-color:var(--line);color:#a9c4dc}.btn.danger{border-color:#ff718b55;background:#4a1c2a66;color:#ff9caf}.btn.small{padding:7px 10px;font-size:12px}.orb-wrap{display:grid;place-items:center;min-height:180px}.orb{width:155px;height:155px;border-radius:50%;border:1px solid #6bdcff66;position:relative;display:grid;place-items:center;background:radial-gradient(circle at 50% 45%,#164c70aa,#081727 65%);box-shadow:0 0 30px #36baff33,inset 0 0 28px #36baff33;animation:float 5s ease-in-out infinite}.orb:before,.orb:after{content:"";position:absolute;inset:-13px;border:1px dashed #61d9ff55;border-radius:50%;animation:spin 22s linear infinite}.orb:after{inset:-24px;border-style:solid;border-color:#61d9ff20 transparent #61d9ff44 transparent;animation-direction:reverse;animation-duration:14s}.orb-core{width:72px;height:72px;border-radius:50%;border:1px solid #7be4ff99;box-shadow:0 0 30px #32baff66,inset 0 0 22px #32baff55;display:grid;place-items:center;color:#b9f4ff;font-size:25px;text-shadow:0 0 15px var(--cyan)}.orb.listening{box-shadow:0 0 45px #39e7ff88,inset 0 0 36px #39e7ff66}.orb.listening:before{border-color:var(--green);animation-duration:5s}@keyframes spin{to{transform:rotate(360deg)}}@keyframes float{50%{transform:translateY(-7px)}}.grid-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:16px 0}.stat{padding:17px}.stat span{color:var(--muted);font-size:11px}.stat strong{display:block;font-size:25px;margin:6px 0 0;letter-spacing:-1px}.stat small{color:#5d8aa9;font-size:10px}.section-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:28px 0 13px}.section-head h3{font-size:15px;margin:0;letter-spacing:.2px}.section-head p{margin:3px 0 0;color:var(--muted);font-size:11px}.two-col{display:grid;grid-template-columns:1fr 1fr;gap:15px}.pad{padding:18px}.activity{display:grid;gap:12px}.activity-item{display:flex;gap:11px;align-items:flex-start;color:#a9c1d6;font-size:12px}.activity-icon{width:27px;height:27px;border-radius:8px;background:#15344c;display:grid;place-items:center;color:var(--cyan);flex:none}.muted{color:var(--muted)}.view{display:none}.view.active{display:block}.toolbar{display:flex;gap:9px;flex-wrap:wrap;margin-bottom:15px}.field{background:#071523;border:1px solid #47708f55;color:var(--text);border-radius:9px;padding:10px 12px;outline:none;min-width:0}.field:focus{border-color:#62d8ff99;box-shadow:0 0 0 3px #49c9ff12}.field::placeholder{color:#617c95}.search{flex:1;min-width:180px}.note-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px}.note-card{padding:16px;min-height:150px;display:flex;flex-direction:column;gap:9px}.note-card h4{margin:0;font-size:14px}.note-card p{margin:0;color:#9db4ca;font-size:12px;white-space:pre-wrap;overflow-wrap:anywhere;flex:1}.card-meta{color:#5e819d;font-size:10px}.card-actions{display:flex;gap:6px}.task-list{display:grid;gap:9px}.task-row{padding:13px 15px;display:flex;align-items:center;gap:12px}.task-row.done .task-title{text-decoration:line-through;color:#6f879c}.task-title{font-weight:600;font-size:13px;flex:1}.priority{font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:4px 7px;border-radius:20px;background:#263b4e;color:#a9c4dc}.priority.high{background:#542637;color:#ff9caf}.priority.medium{background:#4b3b22;color:#ffd58a}.priority.low{background:#183e39;color:#83e9c8}.console{padding:20px}.console-top{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}.console-screen{background:#04101b;border:1px solid #24506b;border-radius:13px;padding:17px;min-height:190px;margin:16px 0;box-shadow:inset 0 0 30px #0d6a8a14}.console-screen .line{font:12px/1.7 ui-monospace,SFMono-Regular,monospace;color:#a7c7dd}.console-screen .line.system{color:var(--cyan)}.console-controls{display:flex;gap:9px;flex-wrap:wrap}.mic-state{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:11px}.pulse{width:8px;height:8px;border-radius:50%;background:#6d8396}.pulse.live{background:var(--green);box-shadow:0 0 12px var(--green);animation:pulse 1s infinite}@keyframes pulse{50%{opacity:.35;transform:scale(.7)}}.history{display:grid;gap:8px;max-height:260px;overflow:auto}.history-row{border-bottom:1px solid #ffffff0b;padding:8px 0;color:#9bb4ca;font:11px ui-monospace,monospace}.settings-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.setting-card{padding:18px}.setting-card h4{margin:0 0 7px}.setting-card p{color:var(--muted);font-size:12px;margin:0 0 14px}.setting-card label{display:block;color:#9bb4ca;font-size:11px;margin:10px 0 5px}.setting-card .field{width:100%}.empty{padding:35px;text-align:center;color:#7590a8;border:1px dashed #47708f55;border-radius:12px}.modal-backdrop{position:fixed;inset:0;background:#020711bb;display:none;place-items:center;z-index:10;padding:18px}.modal-backdrop.open{display:grid}.modal{width:min(520px,100%);padding:20px}.modal h3{margin:0 0 14px}.modal label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}.modal input,.modal textarea,.modal select{width:100%}.modal textarea{min-height:130px;resize:vertical}.modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}.toast{position:fixed;right:20px;bottom:20px;background:#123b50;border:1px solid #66dcff66;color:#e8faff;padding:12px 16px;border-radius:11px;box-shadow:var(--shadow);z-index:20;opacity:0;transform:translateY(10px);transition:.25s;pointer-events:none}.toast.show{opacity:1;transform:translateY(0)}.mobile-menu{display:none}.small-note{font-size:10px;color:#718da6}.footer-note{color:#58728c;font-size:10px;margin-top:24px}
+@media(max-width:950px){.app{grid-template-columns:210px 1fr}.grid-stats{grid-template-columns:repeat(2,1fr)}.note-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:700px){.app{display:block}.sidebar{position:fixed;left:-270px;top:0;bottom:0;width:250px;transition:left .25s;box-shadow:var(--shadow)}.sidebar.open{left:0}.mobile-menu{display:inline-flex}.topbar{align-items:flex-start}.clock{display:none}main{padding:20px 15px 40px}.hero{grid-template-columns:1fr;padding:20px}.orb-wrap{min-height:135px}.orb{width:115px;height:115px}.orb-core{width:56px;height:56px}.two-col,.settings-grid{grid-template-columns:1fr}.note-grid{grid-template-columns:1fr}.grid-stats{gap:9px}.stat{padding:13px}.stat strong{font-size:21px}.top-actions .btn{padding:8px 10px}.task-row{flex-wrap:wrap}}
+</style>
+</head>
+<body>
+<div class="app">
+<aside class="sidebar" id="sidebar">
+  <div class="brand"><div class="brand-mark">M</div><div><strong>M.A.R.S.</strong><small>PERSONAL AI SYSTEM</small></div></div>
+  <div class="nav-label">MAIN SYSTEM</div>
+  <nav class="nav">
+    <button class="active" data-view="home"><span class="ico">⌂</span>Home</button>
+    <button data-view="memory"><span class="ico">◈</span>Memory & Notes</button>
+    <button data-view="tasks"><span class="ico">▤</span>Tasks</button>
+    <button data-view="voice"><span class="ico">◉</span>Voice Console</button>
+  </nav>
+  <div class="nav-label">CONFIGURATION</div>
+  <nav class="nav"><button data-view="settings"><span class="ico">⚙</span>Settings</button></nav>
+  <div class="side-bottom">
+    <div class="drive-status"><div class="status-line"><i class="dot" id="driveDot"></i><span id="driveLabel">Drive not connected</span></div><strong id="driveName">Local session</strong><div class="small-note" id="syncLabel">Changes stay in this browser until connected</div></div>
+    <div class="side-foot">M.A.R.S. CORE · BUILD 01.0</div>
+  </div>
+</aside>
+<main>
+  <header class="topbar">
+    <div style="display:flex;gap:11px;align-items:center"><button class="btn ghost mobile-menu" id="menuBtn">☰</button><div><div class="eyebrow">Modular Artificial Responsive System</div><h1 id="pageTitle">Good evening, Operator.</h1></div></div>
+    <div class="top-actions"><div class="clock" id="clock">--:--:--</div><button class="btn ghost small" id="quickVoice">◉ Voice</button></div>
+  </header>
+
+  <section class="view active" id="view-home">
+    <div class="panel hero">
+      <div><div class="eyebrow">SYSTEM ONLINE · PHASE ONE</div><h2>Your personal intelligence,<br><span style="color:var(--cyan)">at your command.</span></h2><p>M.A.R.S. is ready. Your notes, tasks, and voice controls are organized in one command center.</p><div class="hero-actions"><button class="btn primary" id="heroVoice">Activate voice console</button><button class="btn ghost" id="heroNote">Create a note</button></div></div>
+      <div class="orb-wrap"><div class="orb" id="heroOrb"><div class="orb-core">M</div></div></div>
+    </div>
+    <div class="grid-stats">
+      <div class="panel stat"><span>NOTES STORED</span><strong id="statNotes">0</strong><small>Personal memory</small></div>
+      <div class="panel stat"><span>ACTIVE TASKS</span><strong id="statTasks">0</strong><small>Awaiting completion</small></div>
+      <div class="panel stat"><span>COMPLETED</span><strong id="statDone">0</strong><small>Tasks completed</small></div>
+      <div class="panel stat"><span>DRIVE STATUS</span><strong id="statDrive" style="font-size:16px;margin-top:12px">OFFLINE</strong><small id="statSync">Local session</small></div>
+    </div>
+    <div class="two-col">
+      <div><div class="section-head"><div><h3>Recent memory</h3><p>Your latest saved notes</p></div><button class="btn ghost small" data-go="memory">View all</button></div><div class="panel pad" id="recentNotes"></div></div>
+      <div><div class="section-head"><div><h3>Command activity</h3><p>Recent system events</p></div></div><div class="panel pad activity" id="activity"></div></div>
+    </div>
+  </section>
+
+  <section class="view" id="view-memory">
+    <div class="section-head"><div><div class="eyebrow">PERSONAL MEMORY</div><h3>Notes & Knowledge</h3><p>Create, find, edit, and remove your saved thoughts.</p></div><button class="btn primary" id="newNote">＋ New note</button></div>
+    <div class="toolbar"><input class="field search" id="noteSearch" placeholder="Search notes..."><span class="small-note" id="noteCount" style="align-self:center"></span></div>
+    <div class="note-grid" id="noteGrid"></div>
+  </section>
+
+  <section class="view" id="view-tasks">
+    <div class="section-head"><div><div class="eyebrow">MISSION CONTROL</div><h3>Task management</h3><p>Keep track of priorities and progress.</p></div><button class="btn primary" id="newTask">＋ Add task</button></div>
+    <div class="toolbar"><select class="field" id="taskFilter"><option value="all">All tasks</option><option value="active">Active</option><option value="done">Completed</option></select><select class="field" id="priorityFilter"><option value="all">All priorities</option><option value="high">High priority</option><option value="medium">Medium priority</option><option value="low">Low priority</option></select></div>
+    <div class="task-list" id="taskList"></div>
+  </section>
+
+  <section class="view" id="view-voice">
+    <div class="section-head"><div><div class="eyebrow">VOICE INTERFACE</div><h3>Voice command console</h3><p>Say “Jarvis” followed by a supported command, or use push-to-talk.</p></div></div>
+    <div class="panel console">
+      <div class="console-top"><div class="mic-state"><i class="pulse" id="micPulse"></i><span id="micStatus">Microphone idle</span></div><div class="small-note" id="speechSupport">Checking speech support...</div></div>
+      <div class="console-screen" id="consoleScreen"><div class="line system">M.A.R.S. VOICE INTERFACE // READY</div><div class="line">Awaiting operator input...</div></div>
+      <div class="console-controls"><button class="btn primary" id="wakeBtn">Enable wake word</button><button class="btn" id="pttBtn">Hold to talk</button><button class="btn ghost" id="muteBtn">Mute responses: OFF</button><button class="btn ghost" id="stopVoice">Stop listening</button></div>
+      <div class="section-head"><div><h3>Command history</h3><p>Recent recognized commands and responses</p></div><button class="btn ghost small" id="clearHistory">Clear</button></div>
+      <div class="history" id="history"></div>
+    </div>
+    <div class="section-head"><div><h3>Available commands</h3><p>Use the wake word “Jarvis” before each command.</p></div></div>
+    <div class="panel pad"><div class="two-col"><div class="activity"><div class="activity-item"><span class="activity-icon">＋</span><span><b>Save note</b><br><span class="muted">“Jarvis, save note blockchain idea.”</span></span></div><div class="activity-item"><span class="activity-icon">⌕</span><span><b>Show notes</b><br><span class="muted">“Jarvis, show notes.”</span></span></div><div class="activity-item"><span class="activity-icon">▤</span><span><b>Add task</b><br><span class="muted">“Jarvis, add task study mathematics.”</span></span></div></div><div class="activity"><div class="activity-item"><span class="activity-icon">✓</span><span><b>Complete task</b><br><span class="muted">“Jarvis, complete task study mathematics.”</span></span></div><div class="activity-item"><span class="activity-icon">⌫</span><span><b>Delete task</b><br><span class="muted">“Jarvis, delete task study mathematics.”</span></span></div><div class="activity-item"><span class="activity-icon">⌂</span><span><b>Navigate</b><br><span class="muted">“Jarvis, go home.”</span></span></div></div></div></div>
+  </section>
+
+  <section class="view" id="view-settings">
+    <div class="section-head"><div><div class="eyebrow">SYSTEM CONFIGURATION</div><h3>Settings</h3><p>Connect your Google Drive and configure M.A.R.S.</p></div></div>
+    <div class="settings-grid">
+      <div class="panel setting-card"><h4>Google Drive connection</h4><p>Authorize M.A.R.S. to create and update its JSON memory file in your Drive.</p><label for="clientId">Google OAuth Client ID</label><input class="field" id="clientId" placeholder="xxxx.apps.googleusercontent.com"><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px"><button class="btn primary" id="connectDrive">Connect Google Drive</button><button class="btn ghost" id="disconnectDrive">Disconnect</button></div><p class="small-note" style="margin-top:12px">Use a Web application OAuth client. Add your app origin to Authorized JavaScript origins. Never enter a client secret here.</p></div>
+      <div class="panel setting-card"><h4>Voice preferences</h4><p>Configure the voice interface and spoken responses.</p><label for="voiceLang">Recognition language</label><select class="field" id="voiceLang"><option value="en-US">English (US)</option><option value="en-GB">English (UK)</option><option value="fil-PH">Filipino</option></select><label for="voiceRate">Speech rate</label><input class="field" type="range" id="voiceRate" min=".7" max="1.3" step=".1" value="1"><label><input type="checkbox" id="autoSpeak" checked> Speak responses aloud</label><button class="btn ghost small" id="testVoice">Test voice</button></div>
+      <div class="panel setting-card"><h4>Memory file</h4><p>All persistent M.A.R.S. data is organized in one JSON document.</p><div class="status-line"><i class="dot" id="fileDot"></i><span id="fileStatus">No Drive file connected</span></div><p class="small-note" style="margin-top:12px">File name: <b>mars-jarvis-data.json</b></p><button class="btn ghost small" id="exportData">Export JSON backup</button></div>
+      <div class="panel setting-card"><h4>System information</h4><p>M.A.R.S. Phase 1 runs entirely in your browser with no custom backend or database.</p><div class="small-note">Build: 01.0 · Storage: Google Drive API + temporary local session · Framework: None</div><button class="btn danger small" id="resetLocal" style="margin-top:14px">Reset local session data</button></div>
+    </div>
+    <div class="footer-note">M.A.R.S. is a personal project prototype. Voice recognition availability depends on browser support and may use a browser-managed online recognition service.</div>
+  </section>
+</main>
+</div>
+
+<div class="modal-backdrop" id="noteModal"><div class="panel modal"><h3 id="noteModalTitle">Create note</h3><label for="noteTitle">Title</label><input class="field" id="noteTitle" placeholder="A thought worth keeping"><label for="noteBody">Content</label><textarea class="field" id="noteBody" placeholder="Write your note..."></textarea><div class="modal-actions"><button class="btn ghost" id="cancelNote">Cancel</button><button class="btn primary" id="saveNote">Save note</button></div></div></div>
+<div class="modal-backdrop" id="taskModal"><div class="panel modal"><h3>Add task</h3><label for="taskTitle">Task</label><input class="field" id="taskTitle" placeholder="What needs to be done?"><label for="taskPriority">Priority</label><select class="field" id="taskPriority"><option value="medium">Medium</option><option value="high">High</option><option value="low">Low</option></select><div class="modal-actions"><button class="btn ghost" id="cancelTask">Cancel</button><button class="btn primary" id="saveTask">Add task</button></div></div></div>
+<div class="toast" id="toast"></div>
+
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script>
+(() => {
+"use strict";
+const $ = id => document.getElementById(id);
+const FILE_NAME = "mars-jarvis-data.json";
+const DRIVE_SCOPE = "https://www.googleapis.com/auth/drive.file";
+const blankData = () => ({notes:[],tasks:[],research:[],settings:{voiceLang:"en-US",voiceRate:1,autoSpeak:true},conversations:[]});
+let data = blankData(), tokenClient = null, accessToken = null, driveFileId = null;
+let wakeEnabled = false, muted = false, recognition = null, listeningMode = "", editingNoteId = null;
+let saveTimer = null, activityItems = [], commandHistory = [];
+
+const uid = () => (crypto.randomUUID ? crypto.randomUUID() : "id-"+Date.now()+"-"+Math.random().toString(16).slice(2));
+const escapeHtml = s => String(s ?? "").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function toast(msg){const t=$("toast");t.textContent=msg;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),2600)}
+function logActivity(msg){activityItems.unshift({msg,time:new Date().toLocaleTimeString()});activityItems=activityItems.slice(0,8);renderActivity()}
+function renderActivity(){$("activity").innerHTML=activityItems.length?activityItems.slice(0,5).map(x=>`<div class="activity-item"><span class="activity-icon">›</span><span>${escapeHtml(x.msg)}<br><small class="muted">${x.time}</small></span></div>`).join(""):'<div class="muted">No activity yet. Your system is ready.</div>'}
+function showView(name){document.querySelectorAll(".view").forEach(v=>v.classList.toggle("active",v.id==="view-"+name));document.querySelectorAll("[data-view]").forEach(b=>b.classList.toggle("active",b.dataset.view===name));$("pageTitle").textContent=({home:"Good evening, Operator.",memory:"Memory archive.",tasks:"Mission control.",voice:"Voice command console.",settings:"System settings."})[name]||"M.A.R.S."; $("sidebar").classList.remove("open");if(name==="voice")$("consoleScreen").scrollTop=$("consoleScreen").scrollHeight}
+document.querySelectorAll("[data-view]").forEach(b=>b.addEventListener("click",()=>showView(b.dataset.view)));
+document.querySelectorAll("[data-go]").forEach(b=>b.addEventListener("click",()=>showView(b.dataset.go)));
+$("menuBtn").onclick=()=>$("sidebar").classList.toggle("open");
+$("quickVoice").onclick=$("heroVoice").onclick=()=>showView("voice");
+$("heroNote").onclick=$("newNote").onclick=()=>openNote();
+function updateStats(){
+ $("statNotes").textContent=data.notes.length;
+ $("statTasks").textContent=data.tasks.filter(t=>!t.done).length;
+ $("statDone").textContent=data.tasks.filter(t=>t.done).length;
+ $("statDrive").textContent=accessToken?"CONNECTED":"OFFLINE";
+ $("statSync").textContent=accessToken?"Google Drive":"Local session";
+}
+function renderNotes(){
+ const q=$("noteSearch").value.toLowerCase();
+ const list=data.notes.filter(n=>(n.title+" "+n.body).toLowerCase().includes(q)).sort((a,b)=>b.updated-a.updated);
+ $("noteCount").textContent=`${list.length} note${list.length===1?"":"s"}`;
+ $("noteGrid").innerHTML=list.length?list.map(n=>`<article class="panel note-card"><div class="card-meta">${new Date(n.updated).toLocaleString()}</div><h4>${escapeHtml(n.title||"Untitled note")}</h4><p>${escapeHtml(n.body)}</p><div class="card-actions"><button class="btn ghost small" data-edit-note="${n.id}">Edit</button><button class="btn danger small" data-delete-note="${n.id}">Delete</button></div></article>`).join(""):'<div class="empty" style="grid-column:1/-1">No notes found. Create your first memory.</div>';
+ document.querySelectorAll("[data-edit-note]").forEach(b=>b.onclick=()=>openNote(b.dataset.editNote));
+ document.querySelectorAll("[data-delete-note]").forEach(b=>b.onclick=()=>deleteNote(b.dataset.deleteNote));
+ $("recentNotes").innerHTML=data.notes.length?data.notes.slice().sort((a,b)=>b.updated-a.updated).slice(0,3).map(n=>`<div class="activity-item"><span class="activity-icon">◈</span><span><b>${escapeHtml(n.title)}</b><br><small class="muted">${escapeHtml(n.body.slice(0,76))}${n.body.length>76?"…":""}</small></span></div>`).join(""):'<div class="muted">Your memory archive is empty.</div>';
+ updateStats();
+}
+function openNote(id=null){
+ editingNoteId=id;const n=data.notes.find(x=>x.id===id);
+ $("noteModalTitle").textContent=n?"Edit note":"Create note";$("noteTitle").value=n?.title||"";$("noteBody").value=n?.body||"";$("noteModal").classList.add("open");$("noteTitle").focus();
+}
+function closeNote(){$("noteModal").classList.remove("open");editingNoteId=null}
+$("cancelNote").onclick=closeNote;
+$("saveNote").onclick=async()=>{const title=$("noteTitle").value.trim(),body=$("noteBody").value.trim();if(!title&&!body)return toast("Add a title or some content first.");const now=Date.now();if(editingNoteId){const n=data.notes.find(x=>x.id===editingNoteId);if(n)Object.assign(n,{title:title||"Untitled note",body,updated:now})}else data.notes.unshift({id:uid(),title:title||"Untitled note",body,created:now,updated:now});closeNote();renderNotes();await persist();logActivity("Note saved to memory");toast("Note saved.")};
+async function deleteNote(id){if(!confirm("Delete this note?"))return;data.notes=data.notes.filter(n=>n.id!==id);renderNotes();await persist();logActivity("Note deleted");toast("Note deleted.")}
+$("noteSearch").oninput=renderNotes;
+function renderTasks(){
+ const f=$("taskFilter").value,p=$("priorityFilter").value;
+ const list=data.tasks.filter(t=>(f==="all"||(f==="done"&&t.done)||(f==="active"&&!t.done))&&(p==="all"||t.priority===p)).sort((a,b)=>(a.done-b.done)||({high:0,medium:1,low:2}[a.priority]-{high:0,medium:1,low:2}[b.priority])||b.created-a.created);
+ $("taskList").innerHTML=list.length?list.map(t=>`<div class="panel task-row ${t.done?"done":""}"><input type="checkbox" data-toggle-task="${t.id}" ${t.done?"checked":""} aria-label="Complete task"><span class="task-title">${escapeHtml(t.title)}</span><span class="priority ${t.priority}">${t.priority}</span><button class="btn ghost small" data-priority-task="${t.id}">Priority</button><button class="btn danger small" data-delete-task="${t.id}">Delete</button></div>`).join(""):'<div class="empty">No tasks here. Add a task to get started.</div>';
+ document.querySelectorAll("[data-toggle-task]").forEach(b=>b.onchange=()=>toggleTask(b.dataset.toggleTask));
+ document.querySelectorAll("[data-delete-task]").forEach(b=>b.onclick=()=>deleteTask(b.dataset.deleteTask));
+ document.querySelectorAll("[data-priority-task]").forEach(b=>b.onclick=()=>cyclePriority(b.dataset.priorityTask));
+ updateStats();
+}
+function addTask(title,priority="medium"){if(!title.trim())return false;data.tasks.unshift({id:uid(),title:title.trim(),priority,done:false,created:Date.now()});renderTasks();persist();logActivity("Task added: "+title.trim());return true}
+async function toggleTask(id){const t=data.tasks.find(x=>x.id===id);if(!t)return;t.done=!t.done;renderTasks();await persist();logActivity(t.done?"Task completed":"Task reopened");}
+async function deleteTask(id){const t=data.tasks.find(x=>x.id===id);data.tasks=data.tasks.filter(x=>x.id!==id);renderTasks();await persist();logActivity("Task deleted: "+(t?.title||"task"))}
+async function cyclePriority(id){const t=data.tasks.find(x=>x.id===id);if(!t)return;t.priority=({low:"medium",medium:"high",high:"low"})[t.priority];renderTasks();await persist();toast("Priority changed to "+t.priority)}
+$("taskFilter").onchange=renderTasks;$("priorityFilter").onchange=renderTasks;
+$("newTask").onclick=()=>$("taskModal").classList.add("open");
+$("cancelTask").onclick=()=>$("taskModal").classList.remove("open");
+$("saveTask").onclick=()=>{if(addTask($("taskTitle").value,$("taskPriority").value)){$("taskTitle").value="";$("taskModal").classList.remove("open");toast("Task added.")}else toast("Enter a task first.")};
+
+function setDriveStatus(connected,label){$("driveDot").classList.toggle("on",connected);$("driveLabel").textContent=connected?"Google Drive connected":"Drive not connected";$("driveName").textContent=connected?(label||"Google account authorized"):"Local session";$("syncLabel").textContent=connected?"Memory sync enabled":"Changes stay in this browser until connected";$("fileDot").classList.toggle("on",!!driveFileId);$("fileStatus").textContent=driveFileId?FILE_NAME:"No Drive file connected";updateStats()}
+function loadGis(){if(!window.google?.accounts?.oauth2)return false;const clientId=$("clientId").value.trim();if(!clientId){toast("Enter your Google OAuth Client ID in Settings.");showView("settings");return false}
+ tokenClient=google.accounts.oauth2.initTokenClient({client_id:clientId,scope:DRIVE_SCOPE,callback:async(resp)=>{if(resp.error){toast("Google authorization failed.");return}accessToken=resp.access_token;setDriveStatus(true,"Google account authorized");await loadDriveFile();toast("Google Drive connected.");logActivity("Google Drive connected")}});tokenClient.requestAccessToken({prompt:"consent"});return true}
+$("connectDrive").onclick=()=>{if(!window.google?.accounts?.oauth2){toast("Google sign-in library is still loading. Try again.");return}loadGis()};
+$("disconnectDrive").onclick=()=>{if(accessToken&&google?.accounts?.oauth2)google.accounts.oauth2.revoke(accessToken,()=>{});accessToken=null;driveFileId=null;setDriveStatus(false);toast("Drive disconnected. Local session remains available.")};
+async function driveRequest(url,options={}){const r=await fetch(url,{...options,headers:{Authorization:"Bearer "+accessToken,...(options.headers||{})}});if(!r.ok)throw new Error("Drive request failed: "+r.status);return r.status===204?null:r.json()}
+async function loadDriveFile(){
+ try{const q=encodeURIComponent(`name='${FILE_NAME}' and trashed=false`);const result=await driveRequest(`https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name,mimeType)&pageSize=10`);
+  if(result.files?.length){driveFileId=result.files[0].id;const file=await driveRequest(`https://www.googleapis.com/drive/v3/files/${driveFileId}?alt=media`);data=normalizeData(file);logActivity("Memory loaded from Google Drive")}
+  else{driveFileId=null;await saveDriveFile();logActivity("Created Drive memory file")}
+  setDriveStatus(true);renderAll();
+ }catch(e){console.error(e);toast("Could not load Drive memory. Check Drive API setup and permissions.");setDriveStatus(false)}
+}
+function normalizeData(raw){const d=raw&&typeof raw==="object"?raw:{};return {...blankData(),...d,notes:Array.isArray(d.notes)?d.notes:[],tasks:Array.isArray(d.tasks)?d.tasks:[],research:Array.isArray(d.research)?d.research:[],conversations:Array.isArray(d.conversations)?d.conversations:[],settings:{...blankData().settings,...(d.settings||{})}}}
+async function saveDriveFile(){
+ const body=JSON.stringify(data,null,2);
+ if(!driveFileId){const boundary="mars_boundary_"+uid().replaceAll("-","");const metadata={name:FILE_NAME,mimeType:"application/json"};const payload=`--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${JSON.stringify(metadata)}\r\n--${boundary}\r\nContent-Type: application/json\r\n\r\n${body}\r\n--${boundary}--`;
+ const result=await driveRequest("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name",{method:"POST",headers:{"Content-Type":"multipart/related; boundary="+boundary},body:payload});driveFileId=result.id;
+ }else{await driveRequest(`https://www.googleapis.com/upload/drive/v3/files/${driveFileId}?uploadType=media`,{method:"PATCH",headers:{"Content-Type":"application/json"},body})}
+ setDriveStatus(true);
+}
+async function persist(){
+ clearTimeout(saveTimer);
+ if(!accessToken){$("syncLabel").textContent="Not connected — changes are temporary";return}
+ saveTimer=setTimeout(async()=>{try{await saveDriveFile();$("syncLabel").textContent="Synced "+new Date().toLocaleTimeString()}catch(e){console.error(e);$("syncLabel").textContent="Sync failed — reconnect Drive";toast("Drive sync failed.")}},350);
+}
+function renderAll(){renderNotes();renderTasks();renderActivity();updateStats();$("voiceLang").value=data.settings.voiceLang||"en-US";$("voiceRate").value=data.settings.voiceRate||1;$("autoSpeak").checked=data.settings.autoSpeak!==false}
+$("voiceLang").onchange=()=>{data.settings.voiceLang=$("voiceLang").value;persist()};
+$("voiceRate").oninput=()=>{data.settings.voiceRate=Number($("voiceRate").value);persist()};
+$("autoSpeak").onchange=()=>{data.settings.autoSpeak=$("autoSpeak").checked;persist()};
+$("exportData").onclick=()=>{const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=FILE_NAME;a.click();URL.revokeObjectURL(a.href)};
+$("resetLocal").onclick=()=>{if(!confirm("Reset the current in-browser session? This does not delete your Google Drive file."))return;data=blankData();renderAll();toast("Local session reset. Drive data was not changed.")};
+
+function consoleLine(text,cls=""){const d=document.createElement("div");d.className="line "+cls;d.textContent=text;$("consoleScreen").appendChild(d);$("consoleScreen").scrollTop=$("consoleScreen").scrollHeight}
+function speak(text){consoleLine("M.A.R.S.: "+text,"system");if(muted||data.settings.autoSpeak===false||!("speechSynthesis"in window))return;speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.rate=Number(data.settings.voiceRate||1);speechSynthesis.speak(u)}
+function addHistory(command,response){commandHistory.unshift({command,response,time:new Date().toLocaleTimeString()});commandHistory=commandHistory.slice(0,30);$("history").innerHTML=commandHistory.map(x=>`<div class="history-row"><span style="color:var(--cyan)">${x.time}</span> · YOU: ${escapeHtml(x.command)}<br><span style="color:#91e9c6">M.A.R.S.: ${escapeHtml(x.response)}</span></div>`).join("")}
+function processCommand(raw){
+ let text=raw.trim().toLowerCase().replace(/[.!?]+$/,"");if(!text)return;
+ if(text.startsWith("jarvis"))text=text.slice(6).trim().replace(/^[,:\s]+/,"");
+ let response="I heard you, but I don't recognize that command yet.";
+ if(text.startsWith("save note")||text.startsWith("take note")||text.startsWith("note")){
+  const body=text.replace(/^(save note|take note|note)\s*/,"").trim();if(body){data.notes.unshift({id:uid(),title:body.slice(0,45),body,created:Date.now(),updated:Date.now()});renderNotes();persist();response="I have saved your note."}else response="What would you like me to save?";
+ }else if(text.includes("show notes")||text==="list notes"){showView("memory");response=`You have ${data.notes.length} notes in memory.`}
+ else if(text.startsWith("add task")||text.startsWith("create task")){const title=text.replace(/^(add task|create task)\s*/,"").trim();response=addTask(title)?"Task added to your list.":"What task should I add?"}
+ else if(text.startsWith("complete task")||text.startsWith("finish task")){const q=text.replace(/^(complete task|finish task)\s*/,"").trim();const t=data.tasks.find(x=>!x.done&&x.title.toLowerCase().includes(q));if(t){t.done=true;renderTasks();persist();response="Task marked complete."}else response="I couldn't find that active task."}
+ else if(text.startsWith("delete task")){const q=text.replace(/^delete task\s*/,"").trim();const t=data.tasks.find(x=>x.title.toLowerCase().includes(q));if(t){data.tasks=data.tasks.filter(x=>x.id!==t.id);renderTasks();persist();response="Task deleted."}else response="I couldn't find that task."}
+ else if(text.includes("what")&&text.includes("task")||text.includes("show tasks")||text==="list tasks"){showView("tasks");const active=data.tasks.filter(t=>!t.done);response=active.length?`You have ${active.length} active tasks.`:"You have no active tasks."}
+ else if(text==="go home"||text==="open home"){showView("home");response="Home dashboard is open."}
+ else if(text.includes("open settings")||text==="settings"){showView("settings");response="Settings are open."}
+ else if(text.includes("open memory")||text==="memory"){showView("memory");response="Memory archive is open."}
+ else if(text==="mute yourself"||text==="mute responses"){muted=true;$("muteBtn").textContent="Mute responses: ON";response="Spoken responses are muted."}
+ else if(text==="unmute yourself"||text==="unmute responses"){muted=false;$("muteBtn").textContent="Mute responses: OFF";response="Spoken responses are enabled."}
+ else if(text==="stop listening"){stopListening();response="Voice listening stopped."}
+ addHistory(raw,response);consoleLine("OPERATOR: "+raw);speak(response);logActivity("Voice command: "+raw);renderAll();
+}
+const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
+if(SpeechRecognition){recognition=new SpeechRecognition();recognition.continuous=true;recognition.interimResults=false;recognition.maxAlternatives=1;recognition.lang=data.settings.voiceLang||"en-US";
+ recognition.onstart=()=>{$("micPulse").classList.add("live");$("micStatus").textContent=listeningMode==="wake"?"Listening for “Jarvis”":"Listening for command";$("heroOrb").classList.add("listening")};
+ recognition.onend=()=>{$("micPulse").classList.remove("live");$("heroOrb").classList.remove("listening");if(wakeEnabled&&listeningMode==="wake")setTimeout(()=>{try{recognition.start()}catch(e){}},700);else $("micStatus").textContent="Microphone idle"};
+ recognition.onerror=e=>{consoleLine("Speech error: "+e.error);if(e.error==="not-allowed"){wakeEnabled=false;listeningMode="";$("wakeBtn").textContent="Enable wake word";$("micStatus").textContent="Microphone permission denied"}};
+ recognition.onresult=e=>{for(let i=e.resultIndex;i<e.results.length;i++){if(!e.results[i].isFinal)continue;const said=e.results[i][0].transcript.trim();if(listeningMode==="wake"){if(/\bjarvis\b/i.test(said)){const rest=said.replace(/.*?\bjarvis\b/i,"").trim();if(rest)processCommand("Jarvis "+rest);else{speak("I'm listening.");}}}else{processCommand(said)}}};
+ $("speechSupport").textContent="Speech recognition available";
+}else{$("speechSupport").textContent="Speech recognition unavailable in this browser";$("wakeBtn").disabled=$("pttBtn").disabled=true}
+function startListening(mode){if(!recognition)return;listeningMode=mode;recognition.lang=$("voiceLang").value;try{recognition.start()}catch(e){toast("Voice listener is already active.")}}
+function stopListening(){wakeEnabled=false;listeningMode="";if(recognition)recognition.stop();$("wakeBtn").textContent="Enable wake word";$("micStatus").textContent="Microphone idle";$("micPulse").classList.remove("live")}
+$("wakeBtn").onclick=()=>{if(wakeEnabled){stopListening();return}wakeEnabled=true;$("wakeBtn").textContent="Disable wake word";startListening("wake");toast("Wake-word mode enabled. Say Jarvis followed by a command.")};
+$("pttBtn").onpointerdown=e=>{if(!recognition)return;e.preventDefault();wakeEnabled=false;if(recognition)try{recognition.stop()}catch(_){}setTimeout(()=>startListening("push"),180)};
+$("pttBtn").onpointerup=()=>{if(listeningMode==="push"&&recognition)recognition.stop()};
+$("pttBtn").onpointerleave=()=>{if(listeningMode==="push"&&recognition)recognition.stop()};
+$("stopVoice").onclick=stopListening;
+$("muteBtn").onclick=()=>{muted=!muted;$("muteBtn").textContent="Mute responses: "+(muted?"ON":"OFF");if(muted&&speechSynthesis)speechSynthesis.cancel();toast(muted?"Responses muted.":"Responses unmuted.")};
+$("testVoice").onclick=()=>speak("M.A.R.S. voice systems are operational.");
+$("clearHistory").onclick=()=>{$("history").innerHTML="";commandHistory=[]};
+$("clock").textContent=new Date().toLocaleTimeString();
+setInterval(()=>$("clock").textContent=new Date().toLocaleTimeString(),1000);
+renderAll();logActivity("M.A.R.S. core initialized");setDriveStatus(false);
+})();
+</script>
+</body>
+</html>
