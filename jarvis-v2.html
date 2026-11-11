@@ -1,0 +1,1017 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#030712">
+<title>Mars Jarvis</title>
+<style>
+:root{
+  --bg:#030712; --text:#e6f6ff; --muted:#7f9bb3;
+  --primary:#27e1ff; --primary-d:#0891b2; --mars:#ff6a3d; --ok:#34d399; --warn:#fbbf24; --err:#f87171;
+  --glass:rgba(255,255,255,.045); --glass-b:rgba(120,220,255,.18);
+  --radius:16px; --side:230px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{background:var(--bg);color:var(--text);font-family:"Segoe UI",system-ui,-apple-system,Roboto,sans-serif;overflow:hidden;-webkit-tap-highlight-color:transparent}
+.hidden{display:none!important}
+button,input,select,textarea{font:inherit;color:inherit}
+h1,h2,h3{font-weight:600;letter-spacing:.04em}
+.muted{color:var(--muted)}
+
+/* ---------- Background / HUD effects ---------- */
+.bg-grid{position:fixed;inset:0;z-index:0;background-image:linear-gradient(rgba(39,225,255,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(39,225,255,.06) 1px,transparent 1px);background-size:46px 46px;mask-image:radial-gradient(ellipse at 50% 40%,#000 30%,transparent 80%);animation:gridMove 20s linear infinite}
+@keyframes gridMove{to{background-position:46px 46px}}
+.bg-glow{position:fixed;inset:0;z-index:0;background:radial-gradient(600px 400px at 15% 10%,rgba(39,225,255,.14),transparent 70%),radial-gradient(600px 500px at 90% 90%,rgba(255,106,61,.12),transparent 70%)}
+.scanlines{position:fixed;inset:0;z-index:50;pointer-events:none;background:repeating-linear-gradient(to bottom,rgba(255,255,255,.018) 0,rgba(255,255,255,.018) 1px,transparent 1px,transparent 3px)}
+.scanlines::after{content:"";position:absolute;left:0;right:0;height:120px;background:linear-gradient(to bottom,transparent,rgba(39,225,255,.05),transparent);animation:sweep 7s linear infinite}
+@keyframes sweep{from{top:-120px}to{top:100%}}
+
+.glass{background:var(--glass);border:1px solid var(--glass-b);border-radius:var(--radius);backdrop-filter:blur(16px) saturate(140%);-webkit-backdrop-filter:blur(16px) saturate(140%);box-shadow:0 8px 32px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.06);position:relative}
+.glass::before,.glass::after{content:"";position:absolute;width:14px;height:14px;border:2px solid var(--primary);opacity:.7;pointer-events:none}
+.glass::before{top:-1px;left:-1px;border-right:0;border-bottom:0;border-top-left-radius:var(--radius)}
+.glass::after{bottom:-1px;right:-1px;border-left:0;border-top:0;border-bottom-right-radius:var(--radius)}
+.card{padding:18px}
+.card h3{font-size:.8rem;text-transform:uppercase;color:var(--primary);margin-bottom:12px}
+
+/* ---------- Buttons / inputs ---------- */
+.btn{border:1px solid var(--glass-b);background:rgba(39,225,255,.07);padding:9px 16px;border-radius:10px;cursor:pointer;transition:.2s;font-size:.9rem;white-space:nowrap}
+.btn:hover{background:rgba(39,225,255,.18);box-shadow:0 0 18px rgba(39,225,255,.25)}
+.btn.primary{background:linear-gradient(135deg,rgba(39,225,255,.35),rgba(8,145,178,.35));border-color:var(--primary)}
+.btn.danger{border-color:rgba(248,113,113,.5);color:var(--err);background:rgba(248,113,113,.07)}
+.btn.danger:hover{background:rgba(248,113,113,.18)}
+.btn.small{padding:5px 10px;font-size:.78rem}
+.btn.active{background:rgba(39,225,255,.3);border-color:var(--primary);box-shadow:0 0 18px rgba(39,225,255,.35)}
+.btn.mars.active{background:rgba(255,106,61,.3);border-color:var(--mars);box-shadow:0 0 18px rgba(255,106,61,.35)}
+input,select,textarea{width:100%;background:rgba(0,0,0,.35);border:1px solid var(--glass-b);border-radius:10px;padding:10px 12px;outline:none;transition:.2s}
+input:focus,select:focus,textarea:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(39,225,255,.15)}
+select option{background:#08121f}
+textarea{resize:vertical;min-height:120px}
+label{display:block;font-size:.78rem;color:var(--muted);margin-bottom:12px;letter-spacing:.05em;text-transform:uppercase}
+label>input,label>select,label>textarea{margin-top:6px;text-transform:none;letter-spacing:0;color:var(--text)}
+.inline{display:flex;gap:8px}
+
+/* ---------- Gate ---------- */
+.gate{position:fixed;inset:0;z-index:20;display:flex;align-items:center;justify-content:center;padding:20px;overflow:auto}
+.gate-card{width:min(480px,100%);padding:30px 26px;text-align:center}
+.gate-card h1{font-size:1.8rem;margin:10px 0 4px}
+.gate-card h1 span,.brand span{color:var(--mars)}
+.gate-card label{text-align:left;margin-top:22px}
+.gate-card .btn{width:100%;padding:12px}
+.msg{min-height:20px;margin-top:12px;font-size:.85rem;color:var(--err)}
+.msg.ok{color:var(--ok)}
+details{margin-top:16px;text-align:left;font-size:.82rem;color:var(--muted)}
+details summary{cursor:pointer;color:var(--primary)}
+details ol{padding-left:18px;margin-top:8px;line-height:1.6}
+details code{background:rgba(0,0,0,.4);padding:1px 5px;border-radius:4px;color:var(--text);word-break:break-all}
+
+/* ---------- Layout ---------- */
+.app{position:relative;z-index:2;display:grid;grid-template-columns:var(--side) 1fr;height:100vh;height:100dvh}
+.sidebar{margin:14px 0 14px 14px;padding:18px 12px;display:flex;flex-direction:column;gap:6px}
+.brand{font-size:1.05rem;letter-spacing:.18em;padding:6px 10px 18px;display:flex;align-items:center;gap:10px}
+.brand .logo{width:22px;height:22px;border-radius:50%;border:2px solid var(--primary);box-shadow:0 0 12px var(--primary),inset 0 0 8px var(--primary);position:relative;flex:none}
+.brand .logo::after{content:"";position:absolute;inset:5px;border-radius:50%;background:var(--mars);box-shadow:0 0 8px var(--mars)}
+nav{display:flex;flex-direction:column;gap:4px}
+.nav-btn{display:flex;align-items:center;gap:12px;background:none;border:1px solid transparent;border-radius:10px;padding:11px 12px;cursor:pointer;color:var(--muted);text-align:left;transition:.2s}
+.nav-btn i{font-style:normal;width:20px;text-align:center;font-size:1.05rem}
+.nav-btn:hover{color:var(--text);background:rgba(39,225,255,.06)}
+.nav-btn.active{color:var(--primary);background:rgba(39,225,255,.1);border-color:var(--glass-b);box-shadow:inset 3px 0 0 var(--primary)}
+.side-foot{margin-top:auto;font-size:.72rem;color:var(--muted);padding:8px 10px;line-height:1.5}
+main{display:flex;flex-direction:column;min-width:0;height:100%}
+.topbar{display:flex;align-items:center;gap:10px;padding:14px 18px 6px;flex-wrap:wrap}
+.topbar .title{font-size:1.05rem;letter-spacing:.14em;text-transform:uppercase;flex:1;min-width:120px}
+.pill{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--glass-b);background:var(--glass);border-radius:999px;padding:6px 12px;font-size:.76rem;cursor:default;white-space:nowrap}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--muted);flex:none}
+.pill[data-s=ok] .dot,.pill[data-s=listening] .dot{background:var(--ok);box-shadow:0 0 8px var(--ok)}
+.pill[data-s=busy] .dot,.pill[data-s=armed] .dot,.pill[data-s=ptt] .dot{background:var(--warn);box-shadow:0 0 8px var(--warn);animation:blink 1s infinite}
+.pill[data-s=err] .dot{background:var(--err);box-shadow:0 0 8px var(--err)}
+.pill[data-s=speaking] .dot{background:var(--mars);box-shadow:0 0 8px var(--mars);animation:blink .6s infinite}
+@keyframes blink{50%{opacity:.25}}
+.views{flex:1;overflow-y:auto;padding:10px 18px 24px}
+.view{display:none;animation:fade .35s ease}
+.view.active{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.spacer{flex:1}
+
+/* ---------- Orb (HUD) ---------- */
+.orb{width:170px;height:170px;flex:none;position:relative}
+.orb.small{width:110px;height:110px;margin:0 auto}
+.orb.big{width:230px;height:230px;margin:0 auto}
+.orb svg{width:100%;height:100%;overflow:visible}
+.orb .r1{transform-origin:100px 100px;animation:spin 14s linear infinite}
+.orb .r2{transform-origin:100px 100px;animation:spin 9s linear infinite reverse}
+.orb .r3{transform-origin:100px 100px;animation:spin 22s linear infinite}
+.orb .core{transform-origin:100px 100px;animation:pulse 3s ease-in-out infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes pulse{50%{transform:scale(1.12);opacity:.8}}
+.orb svg{filter:drop-shadow(0 0 14px rgba(39,225,255,.5))}
+body[data-voice=listening] .orb svg{filter:drop-shadow(0 0 20px rgba(52,211,153,.7))}
+body[data-voice=armed] .orb svg,body[data-voice=ptt] .orb svg{filter:drop-shadow(0 0 22px rgba(251,191,36,.8))}
+body[data-voice=speaking] .orb svg{filter:drop-shadow(0 0 24px rgba(255,106,61,.9))}
+body[data-voice=speaking] .orb .core{animation-duration:.5s}
+body[data-voice=speaking] .orb .r1,body[data-voice=ptt] .orb .r1{animation-duration:4s}
+
+/* ---------- Home ---------- */
+.hero{display:flex;gap:22px;align-items:center;padding:22px}
+.hero-text{flex:1;min-width:0}
+.hero h2{font-size:1.5rem;margin-bottom:4px}
+.reply{margin-top:10px;min-height:22px;color:var(--primary);font-size:.92rem}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:14px}
+.stat{padding:16px;text-align:center}
+.stat b{display:block;font-size:1.8rem;color:var(--primary);text-shadow:0 0 14px rgba(39,225,255,.5)}
+.stat span{font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:.1em}
+
+/* ---------- Lists ---------- */
+.item{display:flex;gap:10px;align-items:center;padding:10px 12px;border:1px solid rgba(120,220,255,.1);border-radius:12px;background:rgba(0,0,0,.2);margin-bottom:8px}
+.item .t{flex:1;min-width:0;word-break:break-word}
+.item small{display:block;color:var(--muted);font-size:.72rem;margin-top:2px}
+.item.done .t{text-decoration:line-through;opacity:.5}
+.empty{color:var(--muted);font-size:.85rem;padding:8px 2px}
+.num{color:var(--muted);font-size:.75rem;width:22px;flex:none}
+.prio{width:auto;padding:4px 8px;font-size:.75rem;border-radius:8px}
+.prio.high{border-color:var(--err);color:var(--err)}
+.prio.medium{border-color:var(--warn);color:var(--warn)}
+.prio.low{border-color:var(--ok);color:var(--ok)}
+.chk{width:20px;height:20px;accent-color:var(--primary);flex:none;cursor:pointer}
+.notes-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px;margin-top:14px}
+.note{padding:16px;display:flex;flex-direction:column;gap:8px;min-height:140px}
+.note h4{font-size:1rem;color:var(--primary);word-break:break-word}
+.note p{font-size:.88rem;color:#c5dbe8;white-space:pre-wrap;word-break:break-word;flex:1;max-height:150px;overflow:hidden}
+.note .meta{font-size:.7rem;color:var(--muted)}
+.chip{display:inline-block;font-size:.7rem;padding:3px 9px;border:1px dashed var(--glass-b);border-radius:999px;color:var(--muted);margin:0 6px 6px 0}
+
+/* ---------- Voice console ---------- */
+.vc{display:grid;grid-template-columns:1.1fr 1fr;gap:14px}
+.vc-main{padding:22px;text-align:center}
+.vstatus{margin:10px 0 4px;font-size:1.05rem;letter-spacing:.12em;text-transform:uppercase;color:var(--primary)}
+.transcript{min-height:44px;margin:10px 0;padding:10px;border-radius:10px;background:rgba(0,0,0,.3);font-size:.9rem;color:var(--muted);font-style:italic}
+.ptt{width:100%;margin-top:14px;padding:16px;font-size:1rem;letter-spacing:.1em;user-select:none;-webkit-user-select:none;touch-action:none}
+.history{max-height:520px;overflow-y:auto}
+.hist{padding:10px 12px;border-left:2px solid var(--primary);background:rgba(0,0,0,.2);border-radius:0 10px 10px 0;margin-bottom:8px;font-size:.86rem}
+.hist .u{color:var(--text)}
+.hist .j{color:var(--primary);margin-top:3px}
+.hist small{color:var(--muted);font-size:.7rem}
+
+/* ---------- Modal / toast ---------- */
+.modal{position:fixed;inset:0;z-index:30;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(4px)}
+.modal .glass{width:min(520px,100%);padding:22px;background:rgba(8,18,31,.9)}
+#toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%) translateY(20px);z-index:60;background:rgba(8,18,31,.95);border:1px solid var(--primary);border-radius:12px;padding:10px 18px;opacity:0;transition:.3s;pointer-events:none;max-width:90vw;font-size:.88rem}
+#toast.show{opacity:1;transform:translateX(-50%)}
+.kv{display:grid;grid-template-columns:130px 1fr;gap:6px 12px;font-size:.85rem;margin-bottom:12px}
+.kv dt{color:var(--muted)}
+.kv dd{word-break:break-all}
+.switch{display:flex;align-items:center;gap:10px;margin-bottom:12px;font-size:.88rem;cursor:pointer;text-transform:none;letter-spacing:0;color:var(--text)}
+.switch input{width:auto;margin:0;accent-color:var(--primary)}
+input[type=range]{padding:0;accent-color:var(--primary)}
+::-webkit-scrollbar{width:8px}::-webkit-scrollbar-thumb{background:rgba(39,225,255,.25);border-radius:8px}
+
+/* ---------- Responsive ---------- */
+@media (max-width:860px){
+  .app{grid-template-columns:1fr}
+  .sidebar{position:fixed;left:8px;right:8px;bottom:8px;top:auto;margin:0;padding:6px;flex-direction:row;z-index:15;border-radius:18px}
+  .brand,.side-foot{display:none}
+  nav{flex-direction:row;width:100%;justify-content:space-around}
+  .nav-btn{flex-direction:column;gap:2px;padding:7px 6px;font-size:.66rem;flex:1;align-items:center;text-align:center}
+  .nav-btn.active{box-shadow:inset 0 -3px 0 var(--primary)}
+  .views{padding-bottom:100px}
+  .hero{flex-direction:column;text-align:center}
+  .stats{grid-template-columns:repeat(2,1fr)}
+  .grid2,.vc{grid-template-columns:1fr}
+  .orb{width:140px;height:140px}
+  #toast{bottom:100px}
+}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;animation-iteration-count:1!important}}
+</style>
+</head>
+<body data-voice="idle">
+<div class="bg-grid"></div><div class="bg-glow"></div><div class="scanlines"></div>
+
+<!-- ===== Login gate ===== -->
+<div id="gate" class="gate">
+  <div class="glass gate-card">
+    <div data-orb class="orb small"></div>
+    <h1>MARS <span>JARVIS</span></h1>
+    <p class="muted">Personal AI Operating System · Phase 1</p>
+    <label>Google OAuth Client ID
+      <input id="gateClientId" placeholder="xxxxxxxx.apps.googleusercontent.com" autocomplete="off" spellcheck="false">
+    </label>
+    <button id="gateConnect" class="btn primary">Connect Google Drive</button>
+    <p id="gateMsg" class="msg"></p>
+    <details>
+      <summary>How do I get a Client ID?</summary>
+      <ol>
+        <li>Open Google Cloud Console and create a project.</li>
+        <li>Enable the <b>Google Drive API</b>.</li>
+        <li>Set up the OAuth consent screen (External) and add yourself as a test user.</li>
+        <li>Create credentials &rarr; <b>OAuth client ID</b> &rarr; <b>Web application</b>.</li>
+        <li>Under <b>Authorized JavaScript origins</b> add the address you serve this page from, e.g. <code>http://localhost:8000</code> or your GitHub Pages URL. It will not work from <code>file://</code>.</li>
+        <li>Paste the Client ID above. It is stored only in this browser. Your data lives in <code>jarvis-data.json</code> on your Drive.</li>
+      </ol>
+    </details>
+  </div>
+</div>
+
+<!-- ===== App ===== -->
+<div id="app" class="app hidden">
+  <aside class="sidebar glass">
+    <div class="brand"><span class="logo"></span><span><b>MARS</b> <span>JARVIS</span></span></div>
+    <nav>
+      <button class="nav-btn active" data-view="home"><i>⌂</i>Home</button>
+      <button class="nav-btn" data-view="memory"><i>✎</i>Memory</button>
+      <button class="nav-btn" data-view="tasks"><i>☑</i>Tasks</button>
+      <button class="nav-btn" data-view="voice"><i>◉</i>Voice</button>
+      <button class="nav-btn" data-view="settings"><i>⚙</i>Settings</button>
+    </nav>
+    <div class="side-foot">Phase 1 · Foundation<br>Memory: Google Drive</div>
+  </aside>
+
+  <main>
+    <header class="topbar">
+      <div class="title" id="viewTitle">Home</div>
+      <div class="pill" id="voicePill" data-s="idle"><span class="dot"></span><span id="voicePillText">Voice off</span></div>
+      <div class="pill" id="syncPill" data-s="busy" style="cursor:pointer" title="Click to force sync"><span class="dot"></span><span id="syncText">Drive</span></div>
+      <div class="pill" id="clock">--:--</div>
+    </header>
+
+    <div class="views">
+      <!-- HOME -->
+      <section id="view-home" class="view active">
+        <div class="hero glass">
+          <div data-orb class="orb"></div>
+          <div class="hero-text">
+            <h2 id="greeting">Hello</h2>
+            <p class="muted" id="heroSub">All systems online.</p>
+            <form id="quickForm" class="inline" style="margin-top:14px">
+              <input id="quickInput" placeholder='Type a command, e.g. "add note blockchain idea"' autocomplete="off">
+              <button class="btn primary">Run</button>
+            </form>
+            <div class="reply" id="quickReply"></div>
+          </div>
+        </div>
+        <div class="stats" id="stats"></div>
+        <div class="grid2">
+          <div class="glass card"><h3>Recent notes</h3><div id="homeNotes"></div></div>
+          <div class="glass card"><h3>Open tasks</h3><div id="homeTasks"></div></div>
+        </div>
+        <div class="glass card" style="margin-top:14px">
+          <h3>Module bay</h3>
+          <span class="chip">Notes · online</span><span class="chip">Tasks · online</span><span class="chip">Voice · online</span>
+          <span class="chip">Research · slot reserved</span><span class="chip">Conversations · logging</span>
+          <p class="muted" style="font-size:.8rem;margin-top:6px">Future intelligence modules plug in with <code>MarsJarvis.registerCommand(regex, handler)</code>.</p>
+        </div>
+      </section>
+
+      <!-- MEMORY -->
+      <section id="view-memory" class="view">
+        <div class="row">
+          <input id="noteSearch" placeholder="Search notes…" style="max-width:380px" autocomplete="off">
+          <span class="spacer"></span>
+          <button class="btn primary" id="newNoteBtn">+ New note</button>
+        </div>
+        <div class="notes-grid" id="notesGrid"></div>
+        <div class="glass card" style="margin-top:18px">
+          <h3>Memory file</h3>
+          <div id="memInfo" class="muted" style="font-size:.85rem"></div>
+        </div>
+      </section>
+
+      <!-- TASKS -->
+      <section id="view-tasks" class="view">
+        <form id="taskForm" class="glass card inline" style="align-items:center;flex-wrap:wrap">
+          <input id="taskTitle" placeholder="New task…" style="flex:1;min-width:180px" autocomplete="off">
+          <select id="taskPrio" style="width:130px">
+            <option value="high">High</option><option value="medium" selected>Medium</option><option value="low">Low</option>
+          </select>
+          <button class="btn primary">Add task</button>
+        </form>
+        <div style="margin-top:14px" id="taskList"></div>
+      </section>
+
+      <!-- VOICE -->
+      <section id="view-voice" class="view">
+        <div class="vc">
+          <div class="glass vc-main">
+            <div data-orb class="orb big"></div>
+            <div class="vstatus" id="vStatus">Offline</div>
+            <div class="muted" id="vHint" style="font-size:.82rem"></div>
+            <div class="transcript" id="transcript">Transcript appears here…</div>
+            <div class="reply" id="voiceReply"></div>
+            <div class="row" style="justify-content:center;margin-top:10px">
+              <button class="btn" id="listenBtn">Listening: off</button>
+              <button class="btn mars" id="muteBtn">Mute voice</button>
+            </div>
+            <button class="btn primary ptt" id="pttBtn">HOLD TO TALK</button>
+            <form id="voiceForm" class="inline" style="margin-top:14px">
+              <input id="voiceInput" placeholder="…or type a command" autocomplete="off">
+              <button class="btn">Send</button>
+            </form>
+          </div>
+          <div class="glass card">
+            <div class="row"><h3 style="margin:0">Command history</h3><span class="spacer"></span><button class="btn small danger" id="clearHist">Clear</button></div>
+            <div class="history" id="history" style="margin-top:12px"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SETTINGS -->
+      <section id="view-settings" class="view">
+        <div class="grid2" style="margin-top:0">
+          <div class="glass card">
+            <h3>Voice</h3>
+            <label>Wake word<input id="setWake" autocomplete="off"></label>
+            <label>Voice<select id="setVoice"></select></label>
+            <label>Speech rate <span id="rateVal"></span><input type="range" id="setRate" min="0.6" max="1.6" step="0.05"></label>
+            <label>Pitch <span id="pitchVal"></span><input type="range" id="setPitch" min="0.5" max="1.5" step="0.05"></label>
+            <label class="switch"><input type="checkbox" id="setAuto"> Start continuous listening after sign-in</label>
+            <label class="switch"><input type="checkbox" id="setMuted"> Mute spoken responses</label>
+            <button class="btn" id="testVoice">Test voice</button>
+          </div>
+          <div class="glass card">
+            <h3>Google &amp; Drive</h3>
+            <dl class="kv" id="driveInfo"></dl>
+            <label>OAuth Client ID<input id="setClient" spellcheck="false" autocomplete="off"></label>
+            <div class="row">
+              <button class="btn" id="saveClient">Save Client ID</button>
+              <button class="btn" id="reloadMem">Reload from Drive</button>
+              <button class="btn" id="exportMem">Download backup</button>
+              <button class="btn danger" id="signOut">Sign out</button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+</div>
+
+<!-- Note editor -->
+<div id="modal" class="modal hidden">
+  <form class="glass" id="noteForm">
+    <h3 id="noteModalTitle" style="color:var(--primary);margin-bottom:14px">New note</h3>
+    <label>Title<input id="noteTitle" autocomplete="off"></label>
+    <label>Body<textarea id="noteBody"></textarea></label>
+    <div class="row" style="justify-content:flex-end">
+      <button type="button" class="btn" id="noteCancel">Cancel</button>
+      <button class="btn primary">Save</button>
+    </div>
+  </form>
+</div>
+<div id="toast"></div>
+
+<script>
+(() => {
+'use strict';
+
+/* =====================================================================
+   MARS JARVIS · Phase 1 foundation
+   No backend, no database, no framework. All persistent data lives in
+   jarvis-data.json on the signed-in user's Google Drive.
+   ===================================================================== */
+
+// ---------- helpers ----------
+const $  = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid = () => (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2, 8));
+const nowISO = () => new Date().toISOString();
+const fmtDate = iso => { try { return new Date(iso).toLocaleString([], {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'}); } catch { return ''; } };
+let toastTimer;
+function toast(msg) { const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), 2800); }
+
+const ORB = `<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <circle cx="100" cy="100" r="96" fill="none" stroke="rgba(39,225,255,.25)" stroke-width="1"/>
+  <g class="r1"><circle cx="100" cy="100" r="88" fill="none" stroke="#27e1ff" stroke-width="3" stroke-dasharray="40 14 8 14" stroke-linecap="round"/></g>
+  <g class="r2"><circle cx="100" cy="100" r="72" fill="none" stroke="#ff6a3d" stroke-width="2" stroke-dasharray="3 9"/></g>
+  <g class="r3"><circle cx="100" cy="100" r="58" fill="none" stroke="#27e1ff" stroke-width="5" stroke-dasharray="70 30 20 30" opacity=".7"/></g>
+  <g class="core"><circle cx="100" cy="100" r="30" fill="rgba(39,225,255,.15)" stroke="#27e1ff" stroke-width="2"/>
+  <circle cx="100" cy="100" r="16" fill="#27e1ff" opacity=".9"/><circle cx="100" cy="100" r="7" fill="#fff"/></g>
+</svg>`;
+$$('[data-orb]').forEach(el => el.innerHTML = ORB);
+
+// =====================================================================
+// 1. STATE + MEMORY (Google Drive)
+// =====================================================================
+const FILE_NAME = 'jarvis-data.json';
+const API = 'https://www.googleapis.com/drive/v3';
+const UPLOAD = 'https://www.googleapis.com/upload/drive/v3';
+const SCOPES = 'openid profile email https://www.googleapis.com/auth/drive.file';
+const LS_CLIENT = 'mj_client_id', LS_SEEN = 'mj_connected';
+
+const defaultData = () => ({
+  version: 1,
+  notes: [], tasks: [], research: [], conversations: [],
+  settings: { wakeWord: 'jarvis', voiceName: '', rate: 1, pitch: 1, muted: false, autoListen: true }
+});
+let data = defaultData();
+let fileId = null, lastSynced = null, user = null;
+let saveTimer = null, saveChain = Promise.resolve(), dirty = false;
+let syncState = 'busy', syncMsg = 'Drive';
+
+function setSync(state, msg) {
+  syncState = state;
+  syncMsg = msg || ({ok:'Drive synced', busy:'Syncing…', err:'Sync error'}[state]);
+  const p = $('#syncPill'); if (p) { p.dataset.s = state; $('#syncText').textContent = syncMsg; p.title = state === 'err' ? 'Click to retry' : 'Click to force sync'; }
+  renderSettings();
+}
+
+// ---------- Google auth ----------
+let tokenClient = null, token = null, tokenExp = 0, pendingAuth = null;
+
+function loadGIS() {
+  return new Promise((resolve, reject) => {
+    if (window.google && google.accounts && google.accounts.oauth2) return resolve();
+    const s = document.createElement('script');
+    s.src = 'https://accounts.google.com/gsi/client';
+    s.async = true;
+    s.onload = () => resolve();
+    s.onerror = () => reject(new Error('Could not load Google sign-in. Check your connection.'));
+    document.head.appendChild(s);
+  });
+}
+function initTokenClient(clientId) {
+  tokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: clientId,
+    scope: SCOPES,
+    callback: r => {
+      if (!pendingAuth) return;
+      const p = pendingAuth; pendingAuth = null;
+      if (r.error) return p.reject(new Error(r.error_description || r.error));
+      token = r.access_token; tokenExp = Date.now() + (Number(r.expires_in || 3600) - 60) * 1000;
+      p.resolve(token);
+    },
+    error_callback: e => {
+      if (!pendingAuth) return;
+      const p = pendingAuth; pendingAuth = null;
+      p.reject(new Error(e && e.type === 'popup_closed' ? 'Sign-in window was closed.' : (e && e.type) || 'Sign-in failed'));
+    }
+  });
+}
+function requestToken(prompt) {
+  return new Promise((resolve, reject) => {
+    pendingAuth = { resolve, reject };
+    try { tokenClient.requestAccessToken({ prompt }); } catch (e) { pendingAuth = null; reject(e); }
+  });
+}
+async function ensureToken() {
+  if (token && Date.now() < tokenExp) return token;
+  if (!tokenClient) throw new Error('Not signed in.');
+  return requestToken('');
+}
+async function driveFetch(url, opts = {}, retry = true) {
+  await ensureToken();
+  const r = await fetch(url, { ...opts, headers: { ...(opts.headers || {}), Authorization: 'Bearer ' + token } });
+  if (r.status === 401 && retry) { token = null; return driveFetch(url, opts, false); }
+  if (!r.ok) throw new Error('Drive error ' + r.status + ': ' + (await r.text()).slice(0, 160));
+  return r;
+}
+
+// ---------- Drive file ops ----------
+async function findFile() {
+  const q = encodeURIComponent(`name='${FILE_NAME}' and trashed=false`);
+  const r = await driveFetch(`${API}/files?q=${q}&spaces=drive&fields=files(id,name,modifiedTime)&orderBy=modifiedTime desc`);
+  const j = await r.json();
+  return (j.files && j.files[0]) || null;
+}
+async function createFile(content) {
+  const b = 'mj' + Math.random().toString(36).slice(2);
+  const meta = { name: FILE_NAME, mimeType: 'application/json' };
+  const body = `--${b}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${JSON.stringify(meta)}\r\n--${b}\r\nContent-Type: application/json\r\n\r\n${JSON.stringify(content)}\r\n--${b}--`;
+  const r = await driveFetch(`${UPLOAD}/files?uploadType=multipart&fields=id`, { method: 'POST', headers: { 'Content-Type': 'multipart/related; boundary=' + b }, body });
+  return (await r.json()).id;
+}
+async function updateFile(id, content) {
+  await driveFetch(`${UPLOAD}/files/${id}?uploadType=media`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(content) });
+}
+function normalize(j) {
+  const d = defaultData();
+  ['notes', 'tasks', 'research', 'conversations'].forEach(k => { d[k] = Array.isArray(j && j[k]) ? j[k] : []; });
+  d.settings = { ...d.settings, ...((j && j.settings) || {}) };
+  return d;
+}
+
+// ---------- Memory API: load / save / edit / delete ----------
+async function loadMemory() {
+  setSync('busy', 'Loading memory…');
+  const f = await findFile();
+  if (!f) {
+    data = defaultData();
+    fileId = await createFile(data);
+  } else {
+    fileId = f.id;
+    const r = await driveFetch(`${API}/files/${fileId}?alt=media`);
+    let j = {}; try { j = await r.json(); } catch {}
+    data = normalize(j);
+  }
+  lastSynced = new Date();
+  setSync('ok');
+  renderAll();
+}
+function saveMemory(immediate = false) {
+  dirty = true; setSync('busy', 'Saving…');
+  clearTimeout(saveTimer);
+  if (immediate) return flush();
+  saveTimer = setTimeout(flush, 700);
+  return saveChain;
+}
+function flush() {
+  saveChain = saveChain.then(async () => {
+    if (!dirty || !fileId) return;
+    dirty = false;
+    try { await updateFile(fileId, data); lastSynced = new Date(); setSync('ok'); }
+    catch (e) { dirty = true; setSync('err', 'Sync error'); console.error(e); }
+  });
+  return saveChain;
+}
+function addMemory(col, item) {
+  const rec = { id: uid(), created: nowISO(), updated: nowISO(), ...item };
+  data[col].push(rec); saveMemory(); return rec;
+}
+function editMemory(col, id, patch) {
+  if (col === 'settings') { Object.assign(data.settings, patch); saveMemory(); return data.settings; }
+  const rec = data[col].find(x => x.id === id);
+  if (!rec) return null;
+  Object.assign(rec, patch, { updated: nowISO() }); saveMemory(); return rec;
+}
+function deleteMemory(col, id) {
+  const n = data[col].length;
+  data[col] = data[col].filter(x => x.id !== id);
+  if (data[col].length !== n) saveMemory();
+  return data[col].length !== n;
+}
+
+// =====================================================================
+// 2. NOTES + TASKS
+// =====================================================================
+const sortedNotes = (q = '') => {
+  const s = q.trim().toLowerCase();
+  return [...data.notes].filter(n => !s || (n.title + ' ' + n.body).toLowerCase().includes(s)).sort((a, b) => b.updated.localeCompare(a.updated));
+};
+const PR = { high: 0, medium: 1, low: 2 };
+const sortedTasks = () => [...data.tasks].sort((a, b) => (a.done - b.done) || (PR[a.priority] - PR[b.priority]) || a.created.localeCompare(b.created));
+
+function createNote(title, body) { return addMemory('notes', { title: (title || '').trim() || 'Untitled', body: (body || '').trim() }); }
+function createTask(title, priority) { return addMemory('tasks', { title: title.trim(), priority: PR[priority] !== undefined ? priority : 'medium', done: false }); }
+
+// =====================================================================
+// 3. RENDERING
+// =====================================================================
+const TITLES = { home: 'Home', memory: 'Memory', tasks: 'Tasks', voice: 'Voice Console', settings: 'Settings' };
+let currentView = 'home';
+function showView(v) {
+  if (!TITLES[v]) return;
+  currentView = v;
+  $$('.view').forEach(x => x.classList.toggle('active', x.id === 'view-' + v));
+  $$('.nav-btn').forEach(x => x.classList.toggle('active', x.dataset.view === v));
+  $('#viewTitle').textContent = TITLES[v];
+  $('.views').scrollTop = 0;
+}
+function greetingText() {
+  const h = new Date().getHours();
+  const part = h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening';
+  const name = user && (user.given_name || user.name);
+  return name ? `${part}, ${name}.` : part + '.';
+}
+function renderHome() {
+  $('#greeting').textContent = greetingText();
+  const open = data.tasks.filter(t => !t.done);
+  $('#stats').innerHTML = [
+    [data.notes.length, 'Notes'], [open.length, 'Open tasks'],
+    [open.filter(t => t.priority === 'high').length, 'High priority'], [data.conversations.length, 'Commands']
+  ].map(([n, l]) => `<div class="glass stat"><b>${n}</b><span>${l}</span></div>`).join('');
+  const rn = sortedNotes().slice(0, 4);
+  $('#homeNotes').innerHTML = rn.length ? rn.map(n => `<div class="item"><div class="t">${esc(n.title)}<small>${fmtDate(n.updated)}</small></div></div>`).join('') : '<div class="empty">No notes yet. Say “Jarvis add note …”.</div>';
+  const rt = sortedTasks().filter(t => !t.done).slice(0, 5);
+  $('#homeTasks').innerHTML = rt.length ? rt.map(t => `<div class="item"><div class="t">${esc(t.title)}</div><span class="prio ${t.priority}" style="border:1px solid;border-radius:8px;padding:2px 8px;font-size:.7rem">${t.priority}</span></div>`).join('') : '<div class="empty">Nothing pending.</div>';
+}
+function renderNotes() {
+  const list = sortedNotes($('#noteSearch').value);
+  $('#notesGrid').innerHTML = list.length ? list.map(n => `
+    <div class="glass note" data-id="${n.id}">
+      <h4>${esc(n.title)}</h4>
+      <p>${esc(n.body)}</p>
+      <div class="meta">${fmtDate(n.updated)}</div>
+      <div class="row"><button class="btn small" data-act="edit-note">Edit</button><button class="btn small danger" data-act="del-note">Delete</button></div>
+    </div>`).join('') : `<div class="empty">${$('#noteSearch').value ? 'No notes match your search.' : 'No notes yet. Create one or say “Jarvis add note …”.'}</div>`;
+  $('#memInfo').innerHTML = `jarvis-data.json · ${data.notes.length} notes · ${data.tasks.length} tasks · ${data.research.length} research · ${data.conversations.length} conversations`;
+}
+function renderTasks() {
+  const list = sortedTasks();
+  $('#taskList').innerHTML = list.length ? list.map((t, i) => `
+    <div class="item ${t.done ? 'done' : ''}" data-id="${t.id}">
+      <span class="num">${i + 1}</span>
+      <input type="checkbox" class="chk" data-act="toggle-task" ${t.done ? 'checked' : ''} aria-label="Complete task">
+      <div class="t">${esc(t.title)}<small>${t.done && t.completedAt ? 'Done ' + fmtDate(t.completedAt) : 'Added ' + fmtDate(t.created)}</small></div>
+      <select class="prio ${t.priority}" data-act="prio-task" aria-label="Priority">
+        ${['high', 'medium', 'low'].map(p => `<option value="${p}" ${t.priority === p ? 'selected' : ''}>${p}</option>`).join('')}
+      </select>
+      <button class="btn small danger" data-act="del-task">✕</button>
+    </div>`).join('') : '<div class="empty glass card">No tasks yet. Add one above or say “Jarvis add task …”.</div>';
+}
+function renderHistory() {
+  const list = [...data.conversations].reverse().slice(0, 60);
+  $('#history').innerHTML = list.length ? list.map(c => `
+    <div class="hist"><small>${fmtDate(c.t)} · ${esc(c.via)}</small>
+      <div class="u">${esc(c.input)}</div><div class="j">${esc(c.response)}</div></div>`).join('') : '<div class="empty">No commands yet.</div>';
+}
+function renderSettings() {
+  const info = $('#driveInfo'); if (!info) return;
+  info.innerHTML = `
+    <dt>Account</dt><dd>${esc(user ? (user.email || user.name) : '—')}</dd>
+    <dt>Drive file</dt><dd>${esc(FILE_NAME)}</dd>
+    <dt>File ID</dt><dd>${esc(fileId || '—')}</dd>
+    <dt>Status</dt><dd>${esc(syncMsg)}</dd>
+    <dt>Last synced</dt><dd>${lastSynced ? lastSynced.toLocaleTimeString() : '—'}</dd>`;
+}
+function syncSettingsForm() {
+  const s = data.settings;
+  $('#setWake').value = s.wakeWord; $('#setRate').value = s.rate; $('#setPitch').value = s.pitch;
+  $('#rateVal').textContent = s.rate; $('#pitchVal').textContent = s.pitch;
+  $('#setAuto').checked = !!s.autoListen; $('#setMuted').checked = !!s.muted;
+  $('#setClient').value = localStorage.getItem(LS_CLIENT) || '';
+  populateVoices();
+}
+function renderAll() { renderHome(); renderNotes(); renderTasks(); renderHistory(); renderSettings(); syncSettingsForm(); updateVoiceUI(); }
+
+// =====================================================================
+// 4. VOICE (Web Speech API)
+// =====================================================================
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+const synth = window.speechSynthesis;
+let rec = null, recRunning = false, wantListen = false, pttActive = false, armed = false, armTimer = null;
+let speaking = false, ignoreUntil = 0, failCount = 0;
+let followUp = null, lastFinal = '', lastFinalAt = 0;
+
+const wakeVariants = () => {
+  const w = (data.settings.wakeWord || 'jarvis').trim().toLowerCase();
+  const v = [w];
+  if (w === 'jarvis') v.push('jarvas', 'jervis', 'jarvus', 'jarvi s');
+  return v.map(x => x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+};
+function findWake(text) {
+  const m = new RegExp('\\b(' + wakeVariants().join('|') + ')\\b', 'i').exec(text);
+  return m ? m.index + m[0].length : -1;
+}
+function voiceState() {
+  if (!SR && !synth) return 'unsupported';
+  if (speaking) return 'speaking';
+  if (pttActive) return 'ptt';
+  if (armed) return 'armed';
+  if (wantListen && recRunning) return 'listening';
+  return 'idle';
+}
+function updateVoiceUI() {
+  const s = voiceState();
+  document.body.dataset.voice = s;
+  const wake = data.settings.wakeWord || 'jarvis';
+  const label = { unsupported: 'Voice unsupported', speaking: 'Speaking', ptt: 'Listening (push to talk)', armed: 'Yes? Go ahead…', listening: `Say “${wake}”`, idle: 'Voice idle' }[s];
+  $('#voicePill').dataset.s = s === 'unsupported' || s === 'idle' ? 'idle' : s;
+  $('#voicePillText').textContent = label;
+  $('#vStatus').textContent = { unsupported: 'Unsupported', speaking: 'Speaking', ptt: 'Listening', armed: 'Awaiting command', listening: 'Standing by', idle: 'Offline' }[s];
+  $('#vHint').textContent = !SR ? 'Speech recognition is not supported here. Use Chrome, Edge or Safari. Typed commands still work.' : (wantListen ? `Say “${wake}” followed by a command` : 'Turn Listening on, or hold the button to talk');
+  const lb = $('#listenBtn'); lb.textContent = 'Listening: ' + (wantListen ? 'on' : 'off'); lb.classList.toggle('active', wantListen);
+  const mb = $('#muteBtn'); mb.textContent = data.settings.muted ? 'Unmute voice' : 'Mute voice'; mb.classList.toggle('active', !!data.settings.muted);
+}
+function setTranscript(t, interim) { const el = $('#transcript'); el.textContent = t || 'Transcript appears here…'; el.style.opacity = interim ? .7 : 1; }
+
+function buildRecognizer() {
+  rec = new SR();
+  rec.continuous = !/Android/i.test(navigator.userAgent); rec.interimResults = true; rec.lang = 'en-US'; rec.maxAlternatives = 1;
+  rec.onstart = () => { recRunning = true; updateVoiceUI(); };
+  rec.onresult = e => {
+    failCount = 0;
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      const r = e.results[i], t = r[0].transcript;
+      if (speaking || Date.now() < ignoreUntil) continue; // don't hear ourselves
+      if (r.isFinal) { setTranscript('“' + t.trim() + '”'); handleFinal(t); }
+      else setTranscript(t, true);
+    }
+  };
+  rec.onerror = e => {
+    if (e.error === 'not-allowed' || e.error === 'service-not-allowed') {
+      wantListen = false; toast('Microphone permission was blocked.'); updateVoiceUI();
+    } else if (e.error !== 'no-speech' && e.error !== 'aborted') { failCount++; }
+  };
+  rec.onend = () => {
+    recRunning = false; pttActive = false;
+    if (wantListen && failCount < 6) setTimeout(startRec, 150);
+    else if (wantListen) { wantListen = false; toast('Listening stopped after repeated errors.'); }
+    updateVoiceUI();
+  };
+}
+function startRec() {
+  if (!SR) return;
+  if (!rec) buildRecognizer();
+  if (recRunning) return;
+  try { rec.start(); } catch (e) { /* already started */ }
+}
+function setListening(on) {
+  if (!SR) { toast('Speech recognition is not supported in this browser.'); return; }
+  wantListen = on; failCount = 0;
+  if (on) startRec(); else { armed = false; try { rec && rec.stop(); } catch {} }
+  updateVoiceUI();
+}
+function handleFinal(text) {
+  const raw = text.trim(); if (!raw) return;
+  if (raw === lastFinal && Date.now() - lastFinalAt < 3000) return; // Android repeats results
+  lastFinal = raw; lastFinalAt = Date.now();
+  if (pttActive) { runCommand(raw, 'voice'); return; }
+  const end = findWake(raw);
+  if (end >= 0) {
+    const cmd = raw.slice(end).replace(/^[\s,.:;!?-]+/, '');
+    if (cmd) { armed = false; followUp = null; runCommand(cmd, 'voice'); }
+    else { armed = true; clearTimeout(armTimer); armTimer = setTimeout(() => { armed = false; updateVoiceUI(); }, 8000); speak('Yes?'); }
+  } else if (armed) { armed = false; clearTimeout(armTimer); runCommand(raw, 'voice'); }
+}
+function pttStart(e) {
+  e && e.preventDefault();
+  if (!SR) { toast('Speech recognition is not supported in this browser.'); return; }
+  if (synth) synth.cancel();
+  pttActive = true; if (!rec) buildRecognizer();
+  try { rec.start(); } catch {}
+  updateVoiceUI();
+}
+function pttEnd() {
+  if (!pttActive) return;
+  try { rec.stop(); } catch {}   // final result arrives before onend, which clears pttActive
+  setTimeout(() => { pttActive = false; updateVoiceUI(); }, 1500);
+}
+
+function populateVoices() {
+  const sel = $('#setVoice'); if (!sel || !synth) return;
+  const vs = synth.getVoices();
+  sel.innerHTML = '<option value="">System default</option>' + vs.map(v => `<option value="${esc(v.name)}">${esc(v.name)} (${esc(v.lang)})</option>`).join('');
+  sel.value = data.settings.voiceName || '';
+}
+if (synth) synth.onvoiceschanged = populateVoices;
+
+function speak(text) {
+  $('#voiceReply').textContent = text;
+  if (!synth || data.settings.muted || !text) return;
+  synth.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  const v = synth.getVoices().find(x => x.name === data.settings.voiceName);
+  if (v) u.voice = v;
+  u.rate = Number(data.settings.rate) || 1; u.pitch = Number(data.settings.pitch) || 1;
+  u.onstart = () => { speaking = true; updateVoiceUI(); };
+  const done = () => { speaking = false; ignoreUntil = Date.now() + 450; updateVoiceUI(); };
+  u.onend = done; u.onerror = done;
+  synth.speak(u);
+}
+
+// =====================================================================
+// 5. COMMAND ENGINE (pluggable: future modules call registerCommand)
+// =====================================================================
+const commands = [];
+function registerCommand(pattern, handler) { commands.push({ pattern, handler }); }
+// When Jarvis asks a question, the next thing you say is the answer (no wake word needed)
+function askFollowUp(prefix) { followUp = { prefix, exp: Date.now() + 15000 }; }
+
+function fuzzy(list, q, get) {
+  q = q.toLowerCase().replace(/[^\w\s#]/g, '').trim().replace(/^(the|my|task|note)\s+/, '');
+  const n = q.match(/^(?:#|number\s+)?(\d+)$/);
+  if (n) return list[+n[1] - 1] || null;
+  if (!q) return null;
+  let r = list.find(x => get(x).toLowerCase().includes(q));
+  if (r) return r;
+  const w = q.split(/\s+/).filter(k => k.length > 2);
+  return list.find(x => w.length && w.every(k => get(x).toLowerCase().includes(k))) || null;
+}
+function extractPriority(t, def = 'medium') {
+  let p = def;
+  t = t.replace(/\b(?:with\s+|as\s+)?(?:a\s+)?(high|medium|low)\s+priority\b/i, (_, x) => { p = x.toLowerCase(); return ''; });
+  t = t.replace(/\bpriority\s+(high|medium|low)\b/i, (_, x) => { p = x.toLowerCase(); return ''; });
+  if (/\burgent\b/i.test(t)) { p = 'high'; t = t.replace(/\burgent\b/ig, ''); }
+  return { text: t.replace(/\s+/g, ' ').replace(/^[\s,.:;-]+|[\s,.:;-]+$/g, ''), priority: p };
+}
+const plural = (n, w) => `${n} ${w}${n === 1 ? '' : 's'}`;
+
+// --- system ---
+registerCommand(/^(?:help|what can you do|commands)$/i, () => 'You can say: add note, show notes, search notes, delete last note, add task, complete task, delete task, set priority, go to tasks, or ask for the time.');
+registerCommand(/^(?:hello|hi|hey|good (?:morning|afternoon|evening))$/i, () => greetingText().replace('.', '') + '. How can I help?');
+registerCommand(/^(?:what(?:'s| is) the )?time(?: is it)?(?: now)?$|^what time is it$/i, () => 'It is ' + new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) + '.');
+registerCommand(/^(?:what(?:'s| is) )?(?:the )?(?:date|day)(?: today)?$|^what day is it$/i, () => 'Today is ' + new Date().toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }) + '.');
+registerCommand(/^(?:mute|be quiet|silence)(?: yourself| voice)?$/i, () => { editMemory('settings', null, { muted: true }); syncSettingsForm(); updateVoiceUI(); synth && synth.cancel(); return 'Voice muted.'; });
+registerCommand(/^(?:unmute|speak again)(?: voice)?$/i, () => { editMemory('settings', null, { muted: false }); syncSettingsForm(); updateVoiceUI(); return 'Voice restored.'; });
+registerCommand(/^stop listening$/i, () => { setTimeout(() => setListening(false), 1500); return 'Going quiet. Press Listening to wake me.'; });
+registerCommand(/^(?:go to|open|switch to|take me to|show me)\s+(?:the\s+)?(home|dashboard|memory|notes|tasks|voice(?: console)?|settings)$/i, m => {
+  const k = m[1].toLowerCase(); const v = k === 'dashboard' ? 'home' : k === 'notes' ? 'memory' : k.startsWith('voice') ? 'voice' : k;
+  showView(v); return 'Opening ' + TITLES[v] + '.';
+});
+
+// --- notes ---
+registerCommand(/^(?:show|list|read|open|display|what are)\s+(?:me\s+)?(?:my\s+|all\s+|the\s+)*notes?$/i, () => {
+  const n = sortedNotes(); showView('memory');
+  if (!n.length) return 'You have no notes yet.';
+  return `You have ${plural(n.length, 'note')}. Latest: ${n.slice(0, 3).map(x => x.title).join('; ')}.`;
+});
+registerCommand(/^(?:search|find|look for)\s+(?:my\s+)?notes?(?:\s+(?:for|about))?\s+(.+)$/i, m => {
+  const q = m[1].trim(); const res = sortedNotes(q);
+  showView('memory'); $('#noteSearch').value = q; renderNotes();
+  return res.length ? `Found ${plural(res.length, 'note')} about ${q}: ${res.slice(0, 3).map(x => x.title).join('; ')}.` : `No notes found about ${q}.`;
+});
+registerCommand(/^(?:delete|remove)\s+(?:the\s+)?(?:last|latest|newest)\s+note$/i, () => {
+  const n = sortedNotes()[0]; if (!n) return 'There are no notes to delete.';
+  deleteMemory('notes', n.id); renderAll(); return `Deleted note: ${n.title}.`;
+});
+registerCommand(/^(?:delete|remove)\s+note\s+(.+)$/i, m => {
+  const n = fuzzy(sortedNotes(), m[1], x => x.title + ' ' + x.body); if (!n) return `I could not find a note matching ${m[1]}.`;
+  deleteMemory('notes', n.id); renderAll(); return `Deleted note: ${n.title}.`;
+});
+registerCommand(/^(?:add|save|create|take|make|write|new)\s+(?:an?\s+|new\s+)*note\b[\s:,-]*(?:that\s+|about\s+|saying\s+|to\s+)?(.*)$/i, m => {
+  const t = m[1].trim(); if (!t) { askFollowUp('add note'); return 'What should the note say?'; }
+  createNote(t.length > 48 ? t.slice(0, 45).trim() + '…' : t, t); renderAll(); return 'I have saved your note.';
+});
+registerCommand(/^note\s+(?:that\s+)?(.+)$/i, m => { const t = m[1].trim(); createNote(t.length > 48 ? t.slice(0, 45).trim() + '…' : t, t); renderAll(); return 'I have saved your note.'; });
+
+// --- tasks ---
+registerCommand(/^(?:show|list|read|display|what are)\s+(?:me\s+)?(?:my\s+|all\s+|the\s+)*(?:open\s+|pending\s+)?(?:tasks?|to-?dos?)$|^what do i have to do$/i, () => {
+  const open = sortedTasks().filter(t => !t.done); showView('tasks');
+  if (!open.length) return 'You have no open tasks.';
+  return `You have ${plural(open.length, 'open task')}. ` + open.slice(0, 4).map(t => `${t.title}, ${t.priority} priority`).join('; ') + '.';
+});
+registerCommand(/^(?:add|create|new|make)\s+(?:an?\s+|new\s+)*(?:(high|medium|low)\s+priority\s+)?task\b(.*)$/i, m => {
+  let rest = m[2].replace(/^[\s:,-]*(?:to\s+|called\s+|that\s+)?/i, '');
+  const { text, priority } = extractPriority(rest, (m[1] || 'medium').toLowerCase());
+  if (!text) { askFollowUp('add task'); return 'What is the task?'; }
+  createTask(text, priority); renderAll(); return `Task added: ${text}, ${priority} priority.`;
+});
+registerCommand(/^remind me to\s+(.+)$/i, m => {
+  const { text, priority } = extractPriority(m[1]); createTask(text, priority); renderAll(); return `Added to your tasks: ${text}.`;
+});
+registerCommand(/^(?:complete|finish|finished|check off|done with|mark)\s+(?:the\s+)?task\s+(.+?)(?:\s+(?:as\s+)?(?:done|complete|completed|finished))?$/i, m => {
+  const all = sortedTasks();
+  const t = fuzzy(all.filter(x => !x.done), m[1], x => x.title) || fuzzy(all, m[1], x => x.title);
+  if (!t) return `I could not find a task matching ${m[1]}.`;
+  editMemory('tasks', t.id, { done: true, completedAt: nowISO() }); renderAll(); return `Completed: ${t.title}.`;
+});
+registerCommand(/^(?:delete|remove)\s+(?:the\s+)?task\s+(.+)$/i, m => {
+  const t = fuzzy(sortedTasks(), m[1], x => x.title); if (!t) return `I could not find a task matching ${m[1]}.`;
+  deleteMemory('tasks', t.id); renderAll(); return `Deleted task: ${t.title}.`;
+});
+registerCommand(/^set\s+(?:the\s+)?priority\s+(?:of\s+)?(?:task\s+)?(.+?)\s+to\s+(high|medium|low)$/i, m => {
+  const t = fuzzy(sortedTasks(), m[1], x => x.title); if (!t) return `I could not find a task matching ${m[1]}.`;
+  editMemory('tasks', t.id, { priority: m[2].toLowerCase() }); renderAll(); return `${t.title} is now ${m[2].toLowerCase()} priority.`;
+});
+registerCommand(/^make\s+task\s+(.+?)\s+(high|medium|low)\s+priority$/i, m => {
+  const t = fuzzy(sortedTasks(), m[1], x => x.title); if (!t) return `I could not find a task matching ${m[1]}.`;
+  editMemory('tasks', t.id, { priority: m[2].toLowerCase() }); renderAll(); return `${t.title} is now ${m[2].toLowerCase()} priority.`;
+});
+
+function parseCommand(input) {
+  const c = input.trim().replace(/^[\s,.:;!?-]+|[.!?\s]+$/g, '');
+  for (const { pattern, handler } of commands) {
+    const m = c.match(pattern);
+    if (m) { try { return handler(m, c) || 'Done.'; } catch (e) { console.error(e); return 'Something went wrong running that command.'; } }
+  }
+  return `I did not recognise “${c}”. Say help for a list of commands.`;
+}
+function runCommand(input, via = 'text') {
+  if (!input.trim()) return;
+  let text = input.trim();
+  if (followUp && Date.now() < followUp.exp) text = followUp.prefix + ' ' + text;
+  followUp = null;
+  const response = parseCommand(text);
+  data.conversations.push({ id: uid(), t: nowISO(), via, input: input.trim(), response });
+  if (data.conversations.length > 300) data.conversations = data.conversations.slice(-300);
+  saveMemory(); renderHistory(); renderHome();
+  $('#quickReply').textContent = response;
+  speak(response);
+  if (followUp && via === 'voice') { armed = true; clearTimeout(armTimer); armTimer = setTimeout(() => { armed = false; followUp = null; updateVoiceUI(); }, 15000); updateVoiceUI(); }
+  return response;
+}
+
+// Public surface for future phases
+window.MarsJarvis = { registerCommand, runCommand, speak, loadMemory, saveMemory, editMemory, deleteMemory, addMemory, get data() { return data; } };
+
+// =====================================================================
+// 6. AUTH FLOW + UI WIRING
+// =====================================================================
+async function connect(clientId) {
+  const msg = $('#gateMsg'); msg.className = 'msg'; msg.textContent = '';
+  if (!clientId || !/\.apps\.googleusercontent\.com$/.test(clientId.trim())) { msg.textContent = 'Enter a valid Google OAuth Client ID (ends with .apps.googleusercontent.com).'; return; }
+  const btn = $('#gateConnect'); btn.disabled = true; btn.textContent = 'Connecting…';
+  try {
+    localStorage.setItem(LS_CLIENT, clientId.trim());
+    await loadGIS(); initTokenClient(clientId.trim());
+    await requestToken(localStorage.getItem(LS_SEEN) ? '' : 'consent');
+    try { const r = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', { headers: { Authorization: 'Bearer ' + token } }); if (r.ok) user = await r.json(); } catch {}
+    localStorage.setItem(LS_SEEN, '1');
+    $('#gate').classList.add('hidden'); $('#app').classList.remove('hidden');
+    await loadMemory();
+    setTimeout(() => speak(`${greetingText().replace('.', '')}. All systems online.`), 400);
+    if (data.settings.autoListen && SR) setListening(true);
+  } catch (e) {
+    msg.textContent = e.message || 'Could not connect.';
+    $('#gate').classList.remove('hidden'); $('#app').classList.add('hidden');
+  } finally { btn.disabled = false; btn.textContent = localStorage.getItem(LS_SEEN) ? 'Reconnect Google Drive' : 'Connect Google Drive'; }
+}
+function signOut() {
+  setListening(false); synth && synth.cancel();
+  if (token && window.google) try { google.accounts.oauth2.revoke(token); } catch {}
+  token = null; tokenExp = 0; user = null; fileId = null; data = defaultData();
+  localStorage.removeItem(LS_SEEN);
+  $('#app').classList.add('hidden'); $('#gate').classList.remove('hidden');
+  $('#gateConnect').textContent = 'Connect Google Drive';
+}
+
+// navigation
+$$('.nav-btn').forEach(b => b.addEventListener('click', () => showView(b.dataset.view)));
+$('#gateConnect').addEventListener('click', () => connect($('#gateClientId').value));
+$('#gateClientId').addEventListener('keydown', e => { if (e.key === 'Enter') connect(e.target.value); });
+$('#syncPill').addEventListener('click', () => { if (fileId) saveMemory(true); });
+
+// quick + voice text input
+$('#quickForm').addEventListener('submit', e => { e.preventDefault(); const i = $('#quickInput'); runCommand(i.value, 'text'); i.value = ''; });
+$('#voiceForm').addEventListener('submit', e => { e.preventDefault(); const i = $('#voiceInput'); runCommand(i.value, 'text'); i.value = ''; });
+
+// voice controls
+$('#listenBtn').addEventListener('click', () => setListening(!wantListen));
+$('#muteBtn').addEventListener('click', () => {
+  const m = !data.settings.muted; editMemory('settings', null, { muted: m }); if (m && synth) synth.cancel();
+  syncSettingsForm(); updateVoiceUI(); toast(m ? 'Voice muted' : 'Voice on');
+});
+const ptt = $('#pttBtn');
+ptt.addEventListener('pointerdown', pttStart);
+['pointerup', 'pointerleave', 'pointercancel'].forEach(ev => ptt.addEventListener(ev, pttEnd));
+ptt.addEventListener('contextmenu', e => e.preventDefault());
+$('#clearHist').addEventListener('click', () => { data.conversations = []; saveMemory(); renderHistory(); renderHome(); });
+
+// notes UI
+let editingNote = null;
+function openNoteModal(id) {
+  editingNote = id || null;
+  const n = id ? data.notes.find(x => x.id === id) : null;
+  $('#noteModalTitle').textContent = n ? 'Edit note' : 'New note';
+  $('#noteTitle').value = n ? n.title : ''; $('#noteBody').value = n ? n.body : '';
+  $('#modal').classList.remove('hidden'); setTimeout(() => $('#noteTitle').focus(), 50);
+}
+const closeNoteModal = () => $('#modal').classList.add('hidden');
+$('#newNoteBtn').addEventListener('click', () => openNoteModal());
+$('#noteCancel').addEventListener('click', closeNoteModal);
+$('#modal').addEventListener('click', e => { if (e.target.id === 'modal') closeNoteModal(); });
+$('#noteForm').addEventListener('submit', e => {
+  e.preventDefault();
+  const t = $('#noteTitle').value.trim(), b = $('#noteBody').value.trim();
+  if (!t && !b) return;
+  if (editingNote) editMemory('notes', editingNote, { title: t || 'Untitled', body: b }); else createNote(t, b);
+  closeNoteModal(); renderAll();
+});
+$('#noteSearch').addEventListener('input', renderNotes);
+$('#notesGrid').addEventListener('click', e => {
+  const b = e.target.closest('[data-act]'); if (!b) return;
+  const id = b.closest('.note').dataset.id;
+  if (b.dataset.act === 'edit-note') openNoteModal(id);
+  if (b.dataset.act === 'del-note' && confirm('Delete this note?')) { deleteMemory('notes', id); renderAll(); }
+});
+
+// tasks UI
+$('#taskForm').addEventListener('submit', e => {
+  e.preventDefault(); const i = $('#taskTitle'); if (!i.value.trim()) return;
+  createTask(i.value, $('#taskPrio').value); i.value = ''; renderAll();
+});
+$('#taskList').addEventListener('click', e => {
+  const b = e.target.closest('[data-act]'); if (!b) return;
+  const id = b.closest('.item').dataset.id;
+  if (b.dataset.act === 'del-task') { deleteMemory('tasks', id); renderAll(); }
+});
+$('#taskList').addEventListener('change', e => {
+  const b = e.target.closest('[data-act]'); if (!b) return;
+  const id = b.closest('.item').dataset.id;
+  if (b.dataset.act === 'toggle-task') editMemory('tasks', id, { done: b.checked, completedAt: b.checked ? nowISO() : null });
+  if (b.dataset.act === 'prio-task') editMemory('tasks', id, { priority: b.value });
+  renderAll();
+});
+
+// settings UI
+$('#setWake').addEventListener('change', e => { editMemory('settings', null, { wakeWord: e.target.value.trim().toLowerCase() || 'jarvis' }); updateVoiceUI(); toast('Wake word saved'); });
+$('#setVoice').addEventListener('change', e => editMemory('settings', null, { voiceName: e.target.value }));
+$('#setRate').addEventListener('input', e => { $('#rateVal').textContent = e.target.value; editMemory('settings', null, { rate: Number(e.target.value) }); });
+$('#setPitch').addEventListener('input', e => { $('#pitchVal').textContent = e.target.value; editMemory('settings', null, { pitch: Number(e.target.value) }); });
+$('#setAuto').addEventListener('change', e => editMemory('settings', null, { autoListen: e.target.checked }));
+$('#setMuted').addEventListener('change', e => { editMemory('settings', null, { muted: e.target.checked }); updateVoiceUI(); });
+$('#testVoice').addEventListener('click', () => { const was = data.settings.muted; data.settings.muted = false; speak('Mars Jarvis online. All systems nominal.'); data.settings.muted = was; });
+$('#saveClient').addEventListener('click', () => { localStorage.setItem(LS_CLIENT, $('#setClient').value.trim()); toast('Client ID saved. Sign out and reconnect to apply.'); });
+$('#reloadMem').addEventListener('click', async () => { try { await flush(); await loadMemory(); toast('Memory reloaded from Drive'); } catch (e) { toast(e.message); } });
+$('#exportMem').addEventListener('click', () => {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }));
+  a.download = FILE_NAME; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+});
+$('#signOut').addEventListener('click', signOut);
+
+// clock + boot
+setInterval(() => { $('#clock').textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }); }, 1000);
+window.addEventListener('beforeunload', () => { if (dirty && fileId && token) try { fetch(`${UPLOAD}/files/${fileId}?uploadType=media`, { method: 'PATCH', keepalive: true, headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify(data) }); } catch {} });
+(function boot() {
+  const id = localStorage.getItem(LS_CLIENT) || '';
+  $('#gateClientId').value = id;
+  if (localStorage.getItem(LS_SEEN)) $('#gateConnect').textContent = 'Reconnect Google Drive';
+  if (location.protocol === 'file:') $('#gateMsg').textContent = 'Google sign-in will not work from file://. Serve this page over http://localhost or HTTPS.';
+  updateVoiceUI();
+})();
+})();
+</script>
+</body>
+</html>
